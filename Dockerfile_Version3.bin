@@ -1,0 +1,14 @@
+FROM node:18-bullseye AS builder
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci --silent
+
+FROM node:18-bullseye
+# install ffmpeg and fonts required for ASS rendering
+RUN apt-get update && apt-get install -y ffmpeg fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/node_modules ./node_modules
+COPY . .
+EXPOSE 3000
+CMD ["node", "src/index.js"]
