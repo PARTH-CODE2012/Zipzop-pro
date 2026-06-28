@@ -1,0 +1,7 @@
+body { font-family: Arial, Helvetica, sans-serif; margin: 16px; }
+.container { max-width: 900px; margin: auto; }
+.card { border: 1px solid #ddd; padding: 12px; margin-bottom: 12px; border-radius: 6px; }
+button { padding: 8px 12px; }
+.progress { background: #f3f3f3; border-radius: 8px; overflow: hidden; height: 14px; }
+.progress > div { background: #4caf50; height: 100%; width: 0%; transition: width 200ms; }
+textarea { width: 100%; }
