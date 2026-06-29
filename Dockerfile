@@ -1,58 +1,51 @@
-# Stage: builder
-FROM node:18-bullseye AS builder
+# Builder stage: install deps and build client
+FROM node:18-alpine AS builder
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
-
 WORKDIR /app
 
-# Copy package manifests first to leverage Docker layer caching
+# Copy root package manifests and install root deps (ci if lockfile exists)
 COPY package.json package-lock.json* ./
-
-# Ensure a sane npm default (no audit/fund output)
-# Try `npm ci` when a lockfile exists; otherwise fall back to `npm install`.
-# The `||` fallback ensures the build proceeds if npm ci fails due to missing/invalid lockfile.
 RUN set -eux; \
-    if [ -f package-lock.json ]; then \
-      echo "package-lock.json detected — running npm ci"; \
-      npm ci --silent --no-audit --no-fund || (echo "npm ci failed, falling back to npm install" && npm install --silent --no-audit --no-fund); \
-    else \
-      echo "No package-lock.json — running npm install"; \
-      npm install --silent --no-audit --no-fund; \
-    fi
+  if [ -f package-lock.json ]; then \
+    npm ci --silent --no-audit --no-fund || npm install --silent --no-audit --no-fund; \
+  else \
+    npm install --silent --no-audit --no-fund; \
+  fi
 
-# Copy source (after deps) so changes to code don't bust dependency cache
+# Copy client package manifests and install client deps
+COPY client/package.json client/package-lock.json* ./client/
+RUN set -eux; \
+  if [ -f client/package-lock.json ]; then \
+    (cd client && npm ci --silent --no-audit --no-fund) || (cd client && npm install --silent --no-audit --no-fund); \
+  else \
+    (cd client && npm install --silent --no-audit --no-fund); \
+  fi
+
+# Copy rest of repo and build client
 COPY . .
+RUN cd client && npm run build
 
-# Optional: build step if you have a build script (uncomment if needed)
-# RUN if [ "$NODE_ENV" != "development" ]; then npm run build --if-present; fi
-
-# Stage: runtime
-FROM node:18-bullseye-slim
-
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
-ENV PATH=/app/node_modules/.bin:$PATH
-
-# Install ffmpeg and fonts required for ASS rendering (no recommended packages)
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
-
-# Create app directory and drop privileges
+# Runtime stage
+FROM node:18-alpine
 WORKDIR /app
-# Copy node_modules from builder
-COPY --from=builder /app/node_modules ./node_modules
-# Copy the app source
-COPY --from=builder /app ./
+ENV NODE_ENV=production
+# Set the runtime port (match EXPOSE below)
+ENV PORT=10000
 
-# Ensure non-root user (use node user from official image)
-RUN chown -R node:node /app
+# Install ffmpeg and fonts (alpine packages)
+RUN apk add --no-cache ffmpeg ttf-dejavu ca-certificates
+
+# Copy node_modules and app sources from builder
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/src ./src
+# Copy built client
+COPY --from=builder /app/client/dist ./client/dist
+
+# Use non-root node user
 USER node
 
-EXPOSE 3000
-
-# Healthcheck (optional; adjust endpoint as applicable)
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD [ "sh", "-c", "if [ \"$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/health 2>/dev/null)\" = '200' ]; then exit 0; else exit 1; fi" ]
+EXPOSE 10000
 
 CMD ["node", "src/index.js"]
