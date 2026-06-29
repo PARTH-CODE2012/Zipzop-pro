@@ -9,11 +9,12 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import IORedis from 'ioredis';
 import { QueueEvents } from 'bullmq';
+import { Server as IOServer } from 'socket.io';
 
 dotenv.config();
 
 import authRoutes from './routes/auth.js';
-import videosRoutes, { initStorageFolders, getQueueInstance } from './routes/videos.js';
+import videosRoutes, { initStorageFolders } from './routes/videos.js';
 import { runMigrations } from './db.js';
 import captionsRoutes from './routes/captions.js';
 import premiumRoutes from './routes/premium.js';
@@ -24,6 +25,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const server = http.createServer(app);
 
+// Middlewares
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(cors());
@@ -36,7 +38,7 @@ runMigrations().catch((err) => {
   console.warn('DB migrations failed to run on startup:', err && err.message ? err.message : err);
 });
 
-// Ensure storage directories exist
+// Ensure upload/processed storage exists
 initStorageFolders();
 
 // API routes
@@ -77,6 +79,14 @@ app.get('/_debug_client', (req, res) => {
   }
 });
 
+// Socket.IO setup (create before QueueEvents so handlers can reference io)
+const io = new IOServer(server, { cors: { origin: '*' } });
+
+io.on('connection', (socket) => {
+  console.log('socket connected', socket.id);
+  socket.on('hello', (msg) => console.log('client hello', msg));
+});
+
 /**
  * Safe Redis connection logic for QueueEvents (non-fatal if Redis unavailable)
  */
@@ -106,23 +116,22 @@ const redisConnection = createRedisConnection();
 if (redisConnection) {
   // create QueueEvents to emit job updates to clients via socket.io
   const queueEvents = new QueueEvents('video-processing', { connection: redisConnection });
-  queueEvents.on('progress', ({ jobId, data }) => io.emit('job:progress', { jobId, data }));
-  queueEvents.on('completed', ({ jobId, returnvalue }) => io.emit('job:completed', { jobId, returnvalue }));
-  queueEvents.on('failed', ({ jobId, failedReason }) => io.emit('job:failed', { jobId, failedReason }));
+
+  queueEvents.on('progress', ({ jobId, data }) => {
+    io.emit('job:progress', { jobId, data });
+  });
+  queueEvents.on('completed', ({ jobId, returnvalue }) => {
+    io.emit('job:completed', { jobId, returnvalue });
+  });
+  queueEvents.on('failed', ({ jobId, failedReason }) => {
+    io.emit('job:failed', { jobId, failedReason });
+  });
 } else {
   console.warn('QueueEvents NOT created because Redis connection is not available.');
 }
 
-// Socket.IO setup
-import { Server as IOServer } from 'socket.io';
-const io = new IOServer(server, { cors: { origin: '*' } });
-
-io.on('connection', (socket) => {
-  console.log('socket connected', socket.id);
-  socket.on('hello', (msg) => console.log('client hello', msg));
-});
-
-const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
+// Port (default to 10000 if not provided)
+const PORT = process.env.PORT ? Number(process.env.PORT) : 10000;
 server.listen(PORT, () => {
   console.log(`Server listening on http://0.0.0.0:${PORT}`);
   console.log(`NODE_ENV=${process.env.NODE_ENV}`);
