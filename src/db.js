@@ -7,13 +7,16 @@ dotenv.config();
 
 const { Pool } = pg;
 
-const pool = new Pool({
-  host: process.env.POSTGRES_HOST || 'localhost',
-  port: process.env.POSTGRES_PORT ? Number(process.env.POSTGRES_PORT) : 5432,
-  database: process.env.POSTGRES_DB || 'zipzop',
-  user: process.env.POSTGRES_USER || 'zipzop',
-  password: process.env.POSTGRES_PASSWORD || 'zipzoppass'
-});
+// Support DATABASE_URL (Render style) or individual vars
+const pool = new Pool(
+  process.env.DATABASE_URL ? { connectionString: process.env.DATABASE_URL } : {
+    host: process.env.POSTGRES_HOST || 'localhost',
+    port: process.env.POSTGRES_PORT ? Number(process.env.POSTGRES_PORT) : 5432,
+    database: process.env.POSTGRES_DB || 'zipzop',
+    user: process.env.POSTGRES_USER || 'zipzop',
+    password: process.env.POSTGRES_PASSWORD || 'zipzoppass'
+  }
+);
 
 export async function query(text, params) {
   const res = await pool.query(text, params);
