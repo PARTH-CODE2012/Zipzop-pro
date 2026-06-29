@@ -76,3 +76,15 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`ZipZop Pro Studio server listening on http://localhost:${PORT}`);
 });
+import path from 'path';
+import fs from 'fs';
+
+// Serve client build (Vite production build) if present
+const clientDist = path.join(process.cwd(), 'client', 'dist');
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+  // If using SPA routing, fallback to index.html
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
