@@ -1,15 +1,27 @@
-const API_BASE = (import.meta.env.VITE_API_BASE) ? import.meta.env.VITE_API_BASE : 'http://localhost:3000';
+// client/src/api.js
+// Use VITE_API_BASE if provided at build time; otherwise use relative paths (same origin).
+const API_BASE = (import.meta.env.VITE_API_BASE && import.meta.env.VITE_API_BASE.length > 0) ? import.meta.env.VITE_API_BASE : '';
+
+async function call(path, opts = {}) {
+  const headers = opts.headers || {};
+  const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
+  return res;
+}
 
 export async function register(username, password) {
-  const res = await fetch(`${API_BASE}/api/register`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password })
+  const res = await call('/api/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
   });
   return res.json();
 }
 
 export async function login(username, password) {
-  const res = await fetch(`${API_BASE}/api/login`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password })
+  const res = await call('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
   });
   return res.json();
 }
@@ -75,4 +87,4 @@ export async function getPremiumStatus(token) {
     headers: { 'Authorization': `Bearer ${token}` }
   });
   return res.json();
-}
+    }
