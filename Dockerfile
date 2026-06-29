@@ -1,10 +1,10 @@
 # Builder stage: install deps and build client
-FROM node:18-alpine AS builder
+FROM node:18-bullseye AS builder
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 WORKDIR /app
 
-# Copy root package manifests and install root deps (ci if lockfile exists)
+# Server deps
 COPY package.json package-lock.json* ./
 RUN set -eux; \
   if [ -f package-lock.json ]; then \
@@ -13,39 +13,43 @@ RUN set -eux; \
     npm install --silent --no-audit --no-fund; \
   fi
 
-# Copy client package manifests and install client deps
+# Client deps (install dev deps so vite is available)
 COPY client/package.json client/package-lock.json* ./client/
 RUN set -eux; \
-  if [ -f client/package-lock.json ]; then \
-    (cd client && npm ci --silent --no-audit --no-fund) || (cd client && npm install --silent --no-audit --no-fund); \
+  cd client; \
+  if [ -f package-lock.json ]; then \
+    npm_config_production=false npm ci --silent --no-audit --no-fund || npm_config_production=false npm install --silent --no-audit --no-fund; \
   else \
-    (cd client && npm install --silent --no-audit --no-fund); \
+    npm_config_production=false npm install --silent --no-audit --no-fund; \
   fi
 
-# Copy rest of repo and build client
+# Copy source and build client
 COPY . .
 RUN cd client && npm run build
 
-# Runtime stage
-FROM node:18-alpine
+# Runtime image
+FROM node:18-bullseye-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-# Set the runtime port (match EXPOSE below)
+# Default PORT inside container (used when process.env.PORT is not provided)
 ENV PORT=10000
 
-# Install ffmpeg and fonts (alpine packages)
-RUN apk add --no-cache ffmpeg ttf-dejavu ca-certificates
+# Install runtime packages (ffmpeg + fonts)
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core ca-certificates curl \
+  && rm -rf /var/lib/apt/lists/*
 
-# Copy node_modules and app sources from builder
+# Copy app and built client
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/src ./src
-# Copy built client
 COPY --from=builder /app/client/dist ./client/dist
 
-# Use non-root node user
+# Ensure non-root
+RUN chown -R node:node /app
 USER node
 
+# Expose the internal port
 EXPOSE 10000
 
 CMD ["node", "src/index.js"]
