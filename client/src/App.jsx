@@ -1,4 +1,3 @@
-// client/src/App.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import {
   register as apiRegister,
@@ -15,6 +14,7 @@ import './styles.css';
  * - Real-time word-by-word caption overlay synchronized with video playback
  * - AI ZipZop Co-Pilot with 5 gaming profiles
  * - Dynamic animations (pop-bounce, shake, spin)
+ * - AI Asset Library: Trigger cutout images on keyword matches (CapCut-style)
  * - Full localStorage persistence
  * - Professional dark-mode UI
  */
@@ -78,7 +78,8 @@ const STORAGE_KEYS = {
   UPLOADED_FILENAME: 'zipzop_uploaded_filename',
   SELECTED_AI_MODE: 'zipzop_selected_ai_mode',
   CAPTION_TEXT: 'zipzop_caption_text',
-  COLOR_PRESET: 'zipzop_color_preset'
+  COLOR_PRESET: 'zipzop_color_preset',
+  AI_ASSET_LIBRARY: 'zipzop_ai_asset_library'
 };
 
 export default function App() {
@@ -94,7 +95,7 @@ export default function App() {
     }
   }, []);
 
-  // Inject animations
+  // Inject animations (including new asset pop animation)
   useEffect(() => {
     const styleId = 'zipzop-animations';
     if (!document.getElementById(styleId)) {
@@ -124,6 +125,23 @@ export default function App() {
         @keyframes zipzopSpin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        @keyframes zipzopAssetPop {
+          0% { 
+            transform: scale(0.3) translateY(30px); 
+            opacity: 0; 
+          }
+          70% { 
+            transform: scale(1.12); 
+          }
+          100% { 
+            transform: scale(1) translateY(0); 
+            opacity: 1; 
+          }
+        }
+        @keyframes slideIn {
+          from { transform: translateX(400px); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
         }
       `;
       document.head.appendChild(style);
@@ -159,13 +177,21 @@ export default function App() {
   const [colorPreset, setColorPreset] = useState('#ffd200');
   const [currentTab, setCurrentTab] = useState('ai-copilot');
 
-  // Rehydrate from localStorage
+  // ========== NEW: AI ASSET LIBRARY STATE ==========
+  const [aiAssetLibrary, setAiAssetLibrary] = useState([]);
+  const [assetLibraryTab, setAssetLibraryTab] = useState('library'); // 'library' | 'add'
+  const [assetUploadInput, setAssetUploadInput] = useState('');
+  const [assetKeywordInput, setAssetKeywordInput] = useState('');
+  const assetFileInputRef = useRef(null);
+
+  // Rehydrate from localStorage (including AI assets)
   useEffect(() => {
     const savedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
     const savedUsername = localStorage.getItem(STORAGE_KEYS.USERNAME);
     const savedAiMode = localStorage.getItem(STORAGE_KEYS.SELECTED_AI_MODE);
     const savedCaption = localStorage.getItem(STORAGE_KEYS.CAPTION_TEXT);
     const savedColor = localStorage.getItem(STORAGE_KEYS.COLOR_PRESET);
+    const savedAssets = localStorage.getItem(STORAGE_KEYS.AI_ASSET_LIBRARY);
 
     if (savedToken && savedUsername) {
       setToken(savedToken);
@@ -174,9 +200,16 @@ export default function App() {
     if (savedAiMode) setSelectedAiMode(savedAiMode);
     if (savedCaption) setCaptionText(savedCaption);
     if (savedColor) setColorPreset(savedColor);
+    if (savedAssets) {
+      try {
+        setAiAssetLibrary(JSON.parse(savedAssets));
+      } catch (e) {
+        console.error('Failed to parse saved assets:', e);
+      }
+    }
   }, []);
 
-  // Persist to localStorage
+  // Persist to localStorage (including AI assets)
   useEffect(() => {
     if (selectedAiMode) localStorage.setItem(STORAGE_KEYS.SELECTED_AI_MODE, selectedAiMode);
   }, [selectedAiMode]);
@@ -189,19 +222,23 @@ export default function App() {
     localStorage.setItem(STORAGE_KEYS.COLOR_PRESET, colorPreset);
   }, [colorPreset]);
 
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.AI_ASSET_LIBRARY, JSON.stringify(aiAssetLibrary));
+  }, [aiAssetLibrary]);
+
   // Parse caption lines from text format
   function parseCaptions(text) {
     if (!text) return [];
-    return text.split('|').reduce((acc, val, idx) => {
-      if (idx % 3 === 0) {
-        acc.push({
-          start: parseFloat(val),
-          end: parseFloat(text.split('|')[idx + 1]) || 0,
-          word: text.split('|')[idx + 2] || ''
-        });
-      }
-      return acc;
-    }, []);
+    const parts = text.split('|');
+    const captions = [];
+    for (let i = 0; i < parts.length; i += 3) {
+      captions.push({
+        start: parseFloat(parts[i]) || 0,
+        end: parseFloat(parts[i + 1]) || 0,
+        word: parts[i + 2] || ''
+      });
+    }
+    return captions;
   }
 
   // Update captions when caption text changes
@@ -342,6 +379,67 @@ export default function App() {
     }
   }
 
+  // ========== NEW: AI ASSET LIBRARY HANDLERS ==========
+  function handleAssetFileClick() {
+    if (assetFileInputRef.current) assetFileInputRef.current.click();
+  }
+
+  function handleAssetFileSelected(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setAssetUploadInput(event.target.result);
+      showToast('info', 'Image loaded. Now add keyword and save.');
+    };
+    reader.readAsDataURL(f);
+  }
+
+  function handleAddAssetToLibrary() {
+    if (!assetUploadInput || !assetKeywordInput.trim()) {
+      showToast('error', 'Need both image and keyword');
+      return;
+    }
+
+    const newAsset = {
+      id: Date.now(),
+      triggerKeyword: assetKeywordInput.toUpperCase(),
+      imageUrl: assetUploadInput,
+      active: true
+    };
+
+    setAiAssetLibrary([...aiAssetLibrary, newAsset]);
+    setAssetUploadInput('');
+    setAssetKeywordInput('');
+    showToast('success', `Asset "${newAsset.triggerKeyword}" added to library`);
+  }
+
+  function handleRemoveAsset(assetId) {
+    setAiAssetLibrary(aiAssetLibrary.filter((asset) => asset.id !== assetId));
+    showToast('info', 'Asset removed');
+  }
+
+  function handleToggleAsset(assetId) {
+    setAiAssetLibrary(
+      aiAssetLibrary.map((asset) =>
+        asset.id === assetId ? { ...asset, active: !asset.active } : asset
+      )
+    );
+  }
+
+  // ========== NEW: FIND MATCHING ASSET FOR ACTIVE CAPTION ==========
+  function getMatchingAsset() {
+    if (!activeCaption) return null;
+
+    const activeWord = activeCaption.word.toUpperCase();
+    const matchedAsset = aiAssetLibrary.find(
+      (asset) => asset.active && activeWord.includes(asset.triggerKeyword)
+    );
+
+    return matchedAsset || null;
+  }
+
   // Render
   return (
     <div style={styles.container}>
@@ -411,6 +509,21 @@ export default function App() {
                 onTimeUpdate={handleVideoTimeUpdate}
               />
 
+              {/* ========== NEW: AI ASSET OVERLAY CONTAINER ========== */}
+              {getMatchingAsset() && (
+                <div style={styles.assetOverlayContainer}>
+                  <img
+                    key={`asset-${getMatchingAsset().id}-${activeCaption.start}`}
+                    src={getMatchingAsset().imageUrl}
+                    alt={getMatchingAsset().triggerKeyword}
+                    style={{
+                      ...styles.assetImage,
+                      animation: 'zipzopAssetPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                    }}
+                  />
+                </div>
+              )}
+
               {/* Caption Overlay */}
               {activeCaption && (
                 <div
@@ -474,6 +587,15 @@ export default function App() {
             >
               ✨ Manual
             </button>
+            <button
+              style={{
+                ...styles.tabBtn,
+                ...(currentTab === 'assets' ? styles.tabBtnActive : {})
+              }}
+              onClick={() => setCurrentTab('assets')}
+            >
+              🎯 AI Assets
+            </button>
             <div style={{ flex: 1 }} />
             <button style={styles.resetBtn} onClick={handleReset}>Reset</button>
           </div>
@@ -509,7 +631,7 @@ export default function App() {
                   })}
                 </div>
               </div>
-            ) : (
+            ) : currentTab === 'manual' ? (
               // Manual Editor
               <div>
                 <h3 style={styles.sectionTitle}>Manual Caption Editor</h3>
@@ -556,6 +678,118 @@ export default function App() {
                     {captionLines[0]?.word || 'Preview'}
                   </div>
                 </div>
+              </div>
+            ) : (
+              // ========== NEW: AI ASSETS TAB ==========
+              <div>
+                <div style={styles.assetTabSelector}>
+                  <button
+                    style={{
+                      ...styles.assetTabBtn,
+                      ...(assetLibraryTab === 'library' ? styles.assetTabBtnActive : {})
+                    }}
+                    onClick={() => setAssetLibraryTab('library')}
+                  >
+                    📦 Library ({aiAssetLibrary.length})
+                  </button>
+                  <button
+                    style={{
+                      ...styles.assetTabBtn,
+                      ...(assetLibraryTab === 'add' ? styles.assetTabBtnActive : {})
+                    }}
+                    onClick={() => setAssetLibraryTab('add')}
+                  >
+                    ➕ Add Asset
+                  </button>
+                </div>
+
+                {assetLibraryTab === 'library' ? (
+                  // Asset Library View
+                  <div style={styles.assetLibraryContainer}>
+                    {aiAssetLibrary.length === 0 ? (
+                      <div style={styles.emptyState}>
+                        <div style={styles.emptyStateText}>No assets yet</div>
+                        <div style={styles.emptyStateSubtext}>Add a cutout image to get started</div>
+                      </div>
+                    ) : (
+                      aiAssetLibrary.map((asset) => (
+                        <div key={asset.id} style={styles.assetCard}>
+                          <img
+                            src={asset.imageUrl}
+                            alt={asset.triggerKeyword}
+                            style={styles.assetCardImage}
+                          />
+                          <div style={styles.assetCardInfo}>
+                            <div style={styles.assetCardKeyword}>{asset.triggerKeyword}</div>
+                            <div style={styles.assetCardActions}>
+                              <button
+                                style={{
+                                  ...styles.assetToggleBtn,
+                                  ...(asset.active ? styles.assetToggleBtnActive : {})
+                                }}
+                                onClick={() => handleToggleAsset(asset.id)}
+                              >
+                                {asset.active ? '✓ Active' : 'Inactive'}
+                              </button>
+                              <button
+                                style={styles.assetDeleteBtn}
+                                onClick={() => handleRemoveAsset(asset.id)}
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                ) : (
+                  // Add Asset View
+                  <div>
+                    <div style={styles.field}>
+                      <label style={styles.label}>Select Image (PNG with transparent background)</label>
+                      <button style={styles.chooseBtn} onClick={handleAssetFileClick}>
+                        📸 Choose Image
+                      </button>
+                      <input
+                        ref={assetFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAssetFileSelected}
+                        style={{ display: 'none' }}
+                      />
+                    </div>
+
+                    {assetUploadInput && (
+                      <div style={styles.previewBox}>
+                        <div style={styles.previewLabel}>Image Preview</div>
+                        <img
+                          src={assetUploadInput}
+                          alt="preview"
+                          style={{ maxWidth: '100%', maxHeight: 150, objectFit: 'contain' }}
+                        />
+                      </div>
+                    )}
+
+                    <div style={styles.field}>
+                      <label style={styles.label}>Trigger Keyword (e.g., "LAMBORGHINI")</label>
+                      <input
+                        type="text"
+                        placeholder="Enter keyword"
+                        value={assetKeywordInput}
+                        onChange={(e) => setAssetKeywordInput(e.target.value)}
+                        style={styles.textInput}
+                      />
+                      <div style={styles.inputHint}>
+                        This word in captions will trigger the image to pop up
+                      </div>
+                    </div>
+
+                    <button style={styles.primaryBtn} onClick={handleAddAssetToLibrary}>
+                      💾 Add to Library
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -653,6 +887,25 @@ const styles = {
 
   videoPlayerWrapper: { position: 'relative', width: '100%', height: '100%', overflow: 'hidden' },
   videoPlayer: { width: '100%', height: '100%', objectFit: 'contain' },
+
+  // ========== NEW: AI ASSET OVERLAY STYLES ==========
+  assetOverlayContainer: {
+    position: 'absolute',
+    top: '15%',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 60,
+    pointerEvents: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  assetImage: {
+    maxWidth: 250,
+    maxHeight: 250,
+    objectFit: 'contain',
+    filter: 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6))'
+  },
 
   // Caption Overlay
   captionOverlay: {
@@ -777,6 +1030,14 @@ const styles = {
     fontFamily: 'monospace',
     resize: 'none'
   },
+  textInput: {
+    padding: '8px 10px',
+    borderRadius: 6,
+    background: '#1a1a1a',
+    border: '1px solid rgba(255,255,255,0.1)',
+    color: '#fff',
+    fontSize: 12
+  },
 
   colorInputRow: { display: 'flex', gap: 8 },
   colorInput: { width: 50, height: 36, borderRadius: 6, border: 'none', cursor: 'pointer' },
@@ -798,6 +1059,116 @@ const styles = {
     marginTop: 8
   },
   previewLabel: { fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 8 },
+
+  // ========== NEW: AI ASSET STYLES ==========
+  assetTabSelector: {
+    display: 'flex',
+    gap: 8,
+    marginBottom: 12,
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
+    paddingBottom: 8
+  },
+  assetTabBtn: {
+    padding: '6px 10px',
+    borderRadius: 4,
+    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'transparent',
+    color: 'rgba(255,255,255,0.6)',
+    cursor: 'pointer',
+    fontSize: 11,
+    fontWeight: 600,
+    transition: 'all 0.2s'
+  },
+  assetTabBtnActive: {
+    background: 'rgba(255,210,0,0.08)',
+    border: '1px solid rgba(255,210,0,0.6)',
+    color: '#ffd200'
+  },
+  assetLibraryContainer: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+    gap: 10
+  },
+  assetCard: {
+    padding: 8,
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 6
+  },
+  assetCardImage: {
+    width: 80,
+    height: 80,
+    objectFit: 'contain',
+    borderRadius: 4
+  },
+  assetCardInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 4,
+    width: '100%'
+  },
+  assetCardKeyword: {
+    fontSize: 10,
+    fontWeight: 700,
+    color: '#ffd200',
+    textAlign: 'center',
+    wordBreak: 'break-word'
+  },
+  assetCardActions: {
+    display: 'flex',
+    gap: 4,
+    width: '100%'
+  },
+  assetToggleBtn: {
+    flex: 1,
+    padding: '4px 6px',
+    borderRadius: 4,
+    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'rgba(255,255,255,0.05)',
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 9,
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.2s'
+  },
+  assetToggleBtnActive: {
+    background: 'rgba(76,175,80,0.2)',
+    border: '1px solid rgba(76,175,80,0.6)',
+    color: '#4caf50'
+  },
+  assetDeleteBtn: {
+    padding: '4px 6px',
+    borderRadius: 4,
+    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'transparent',
+    cursor: 'pointer',
+    fontSize: 10
+  },
+  emptyState: {
+    textAlign: 'center',
+    padding: '20px',
+    color: 'rgba(255,255,255,0.5)'
+  },
+  emptyStateText: {
+    fontSize: 14,
+    fontWeight: 600,
+    marginBottom: 4
+  },
+  emptyStateSubtext: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.4)'
+  },
+  inputHint: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: 4,
+    fontStyle: 'italic'
+  },
 
   // Status Bar
   statusBar: {
