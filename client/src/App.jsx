@@ -11,11 +11,11 @@ import {
 import './styles.css';
 
 /**
- * Updated UI: No alerts, localStorage persistence, silent background processing
- * - Removes all window.alert() calls
- * - Shows toast/feedback UI instead
- * - Persists uploaded filename, tab state, captions to localStorage
- * - Rehydrates on mount
+ * Professional Full-Screen Studio Layout:
+ * - Token persistence (login survives refresh)
+ * - Top half: sticky video player with loading overlay
+ * - Bottom half: scrollable workspace tabs
+ * - Real HTML5 video player with spinner/checkmark on processing
  */
 
 const TABS = { TRIM: 'trim', CAPTIONS: 'captions', COLORS: 'colors', TEMPLATES: 'templates', AI: 'ai' };
@@ -53,6 +53,8 @@ const TEMPLATE_PRESETS = [
 
 // localStorage keys
 const STORAGE_KEYS = {
+  TOKEN: 'zipzop_token',
+  USERNAME: 'zipzop_username',
   UPLOADED_FILENAME: 'zipzop_uploaded_filename',
   CURRENT_TAB: 'zipzop_current_tab',
   CAPTION_TEXT: 'zipzop_caption_text',
@@ -81,13 +83,19 @@ export default function App() {
 
   // File / upload state
   const fileInputRef = useRef(null);
+  const videoRef = useRef(null);
   const [localFile, setLocalFile] = useState(null);
   const [uploadedFilename, setUploadedFilename] = useState(null);
+  const [uploadedVideoUrl, setUploadedVideoUrl] = useState(null);
   const [uploadStatus, setUploadStatus] = useState('idle'); // idle | uploading | uploaded | error
 
   // Toast/feedback state
-  const [toast, setToast] = useState(null); // { type: 'success'|'error'|'info', message, id }
-  const [processingJobs, setProcessingJobs] = useState({}); // { jobId: { status, progress } }
+  const [toast, setToast] = useState(null);
+  const [processingJobs, setProcessingJobs] = useState({});
+
+  // Processing overlay state
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingComplete, setProcessingComplete] = useState(false);
 
   // Tab & content states
   const [currentTab, setCurrentTab] = useState(TABS.TRIM);
@@ -108,8 +116,10 @@ export default function App() {
   // AI running
   const [aiRunning, setAiRunning] = useState(false);
 
-  // Rehydrate from localStorage on mount
+  // Rehydrate from localStorage on mount (including token/auth)
   useEffect(() => {
+    const savedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
+    const savedUsername = localStorage.getItem(STORAGE_KEYS.USERNAME);
     const savedFilename = localStorage.getItem(STORAGE_KEYS.UPLOADED_FILENAME);
     const savedTab = localStorage.getItem(STORAGE_KEYS.CURRENT_TAB);
     const savedCaption = localStorage.getItem(STORAGE_KEYS.CAPTION_TEXT);
@@ -117,6 +127,11 @@ export default function App() {
     const savedColor = localStorage.getItem(STORAGE_KEYS.COLOR_PRESET);
     const savedStartTime = localStorage.getItem(STORAGE_KEYS.START_TIME);
     const savedDuration = localStorage.getItem(STORAGE_KEYS.DURATION);
+
+    if (savedToken && savedUsername) {
+      setToken(savedToken);
+      setUsername(savedUsername);
+    }
 
     if (savedFilename) setUploadedFilename(savedFilename);
     if (savedTab) setCurrentTab(savedTab);
@@ -127,7 +142,7 @@ export default function App() {
     if (savedDuration) setDuration(savedDuration);
   }, []);
 
-  // Persist state to localStorage
+  // Persist state to localStorage (non-auth)
   useEffect(() => {
     if (uploadedFilename) localStorage.setItem(STORAGE_KEYS.UPLOADED_FILENAME, uploadedFilename);
   }, [uploadedFilename]);
@@ -156,6 +171,12 @@ export default function App() {
     localStorage.setItem(STORAGE_KEYS.DURATION, duration);
   }, [duration]);
 
+  // Update processing state based on active jobs
+  useEffect(() => {
+    const hasProcessing = Object.values(processingJobs).some((j) => j.status === 'processing' || j.status === 'queued');
+    setIsProcessing(hasProcessing);
+  }, [processingJobs]);
+
   // Toast helper
   function showToast(type, message) {
     const id = Date.now();
@@ -163,23 +184,39 @@ export default function App() {
     setTimeout(() => setToast(null), 3500);
   }
 
-  // Clear workspace
+  // Clear workspace (video & settings, but keep token)
   function handleResetWorkspace() {
-    if (window.confirm('Clear all uploaded files and workspace state?')) {
+    if (window.confirm('Clear all uploaded files and workspace state? (You will stay logged in)')) {
       setUploadedFilename(null);
+      setUploadedVideoUrl(null);
       setLocalFile(null);
       setUploadStatus('idle');
       setProcessingJobs({});
+      setProcessingComplete(false);
       setCaptionText('0|4|Hello world');
       setSelectedTemplate(null);
       setStartTime('00:00:00');
       setDuration('30');
       setColorPreset('vibrant');
       setCurrentTab(TABS.TRIM);
-      // Clear localStorage
-      Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
+      // Clear localStorage (except token/username)
+      Object.entries(STORAGE_KEYS).forEach(([key, storageKey]) => {
+        if (key !== 'TOKEN' && key !== 'USERNAME') {
+          localStorage.removeItem(storageKey);
+        }
+      });
       showToast('info', 'Workspace cleared');
     }
+  }
+
+  // Logout
+  function handleLogout() {
+    setToken('');
+    setUsername(null);
+    localStorage.removeItem(STORAGE_KEYS.TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.USERNAME);
+    handleResetWorkspace();
+    showToast('info', 'Logged out');
   }
 
   // ----- Auth handlers -----
@@ -207,6 +244,9 @@ export default function App() {
       if (r && r.token) {
         setToken(r.token);
         setUsername(r.username || u);
+        // Persist to localStorage
+        localStorage.setItem(STORAGE_KEYS.TOKEN, r.token);
+        localStorage.setItem(STORAGE_KEYS.USERNAME, r.username || u);
         showToast('success', 'Logged in as ' + (r.username || u));
       } else {
         showToast('error', 'Login failed: ' + JSON.stringify(r));
@@ -230,8 +270,10 @@ export default function App() {
     // If new file, clear old uploaded state
     if (uploadedFilename) {
       setUploadedFilename(null);
+      setUploadedVideoUrl(null);
       localStorage.removeItem(STORAGE_KEYS.UPLOADED_FILENAME);
       setProcessingJobs({});
+      setProcessingComplete(false);
     }
 
     // Auto-upload flow
@@ -246,7 +288,10 @@ export default function App() {
       const rsp = await apiUpload(token, f);
       if (rsp && rsp.ok) {
         const fn = rsp.filename || f.name;
+        // Create local video URL for preview
+        const videoUrl = URL.createObjectURL(f);
         setUploadedFilename(fn);
+        setUploadedVideoUrl(videoUrl);
         setUploadStatus('uploaded');
         showToast('success', 'Video uploaded: ' + fn);
       } else {
@@ -277,6 +322,7 @@ export default function App() {
       if (rsp && rsp.ok) {
         const jobId = rsp.jobId || rsp.id || 'unknown';
         setProcessingJobs((prev) => ({ ...prev, [jobId]: { status: 'queued', progress: 0 } }));
+        setProcessingComplete(false);
         showToast('success', 'Trim job queued');
       } else {
         showToast('error', 'Trim failed: ' + JSON.stringify(rsp));
@@ -303,6 +349,7 @@ export default function App() {
       if (rsp && rsp.ok) {
         const jobId = rsp.jobId || rsp.id || 'unknown';
         setProcessingJobs((prev) => ({ ...prev, [jobId]: { status: 'processing', progress: 0 } }));
+        setProcessingComplete(false);
         showToast('success', 'Generating normal captions...');
       } else {
         showToast('error', 'Failed to queue captions: ' + JSON.stringify(rsp));
@@ -389,6 +436,7 @@ export default function App() {
       if (rsp && rsp.ok) {
         const jobId = rsp.jobId || rsp.id || 'unknown';
         setProcessingJobs((prev) => ({ ...prev, [jobId]: { status: 'processing', progress: 0 } }));
+        setProcessingComplete(false);
         showToast('success', 'Color grade job queued');
       } else {
         showToast('error', 'Failed: ' + JSON.stringify(rsp));
@@ -422,6 +470,7 @@ export default function App() {
       if (rsp && rsp.ok) {
         const jobId = rsp.jobId || rsp.id || 'unknown';
         setProcessingJobs((prev) => ({ ...prev, [jobId]: { status: 'processing', progress: 0 } }));
+        setProcessingComplete(false);
         showToast('success', 'AI Auto-Cut job started');
       } else {
         showToast('error', 'Failed: ' + JSON.stringify(rsp));
@@ -434,9 +483,23 @@ export default function App() {
     }
   }
 
+  // Simulate processing complete (in real app, socket.io would trigger this)
+  useEffect(() => {
+    if (Object.keys(processingJobs).length > 0 && !processingComplete) {
+      const timer = setTimeout(() => {
+        setProcessingComplete(true);
+        setTimeout(() => {
+          setProcessingJobs({});
+          setProcessingComplete(false);
+        }, 2000);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [processingJobs, processingComplete]);
+
   // Render
   return (
-    <div style={styles.app}>
+    <div style={styles.appContainer}>
       {/* Toast notification */}
       {toast && (
         <div style={{ ...styles.toast, ...styles[`toast_${toast.type}`] }}>
@@ -461,175 +524,198 @@ export default function App() {
                 <button style={styles.primaryButton} onClick={handleLogin}>Login</button>
               </div>
             ) : (
-              <div style={styles.welcome}>Welcome, <strong>{username}</strong></div>
+              <div style={styles.authRow}>
+                <div style={styles.welcome}>Welcome, <strong>{username}</strong></div>
+                <button style={styles.ghostButton} onClick={handleLogout}>Logout</button>
+              </div>
             )}
           </div>
           <div style={styles.subheadline}>AI Waste Detector, Color Grader, Caption Creator & Relighter</div>
         </div>
       </header>
 
-      {/* Main */}
-      <main style={styles.main}>
-        {/* Upload box */}
-        <div style={styles.uploadBox}>
-          <div style={styles.uploadInner}>
-            {uploadStatus === 'uploading' ? (
-              <div style={styles.uploadingText}>Uploading video...</div>
-            ) : (
-              <>
-                <div style={styles.uploadTitle}>अपलोड वीडियो</div>
-                <div style={styles.uploadSubtitle}>जिपजॉप एआई एडिटर</div>
-                <div style={{ height: 18 }} />
-                <button style={styles.chooseButton} onClick={handleChooseClick}>
-                  Choose Video File
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="video/*"
-                  onChange={handleFileSelected}
-                  style={{ display: 'none' }}
-                />
-                <div style={{ height: 12 }} />
-                {uploadStatus === 'uploaded' && (
-                  <div style={styles.uploadedNote}>✓ Uploaded: {uploadedFilename}</div>
+      {/* Main studio container */}
+      <div style={styles.studioContainer}>
+        {/* Top Half: Sticky Video Player */}
+        <div style={styles.videoPlayerSection}>
+          {uploadStatus !== 'uploaded' ? (
+            // Upload box
+            <div style={styles.uploadBox}>
+              <div style={styles.uploadInner}>
+                {uploadStatus === 'uploading' ? (
+                  <div style={styles.uploadingText}>Uploading video...</div>
+                ) : (
+                  <>
+                    <div style={styles.uploadTitle}>अपलोड वीडियो</div>
+                    <div style={styles.uploadSubtitle}>जिपजॉप एआई एडिटर</div>
+                    <div style={{ height: 18 }} />
+                    <button style={styles.chooseButton} onClick={handleChooseClick}>
+                      Choose Video File
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="video/*"
+                      onChange={handleFileSelected}
+                      style={{ display: 'none' }}
+                    />
+                    <div style={{ height: 12 }} />
+                    {uploadStatus === 'error' && (
+                      <div style={styles.errorNote}>✕ Upload failed. Please try again.</div>
+                    )}
+                  </>
                 )}
-                {uploadStatus === 'error' && (
-                  <div style={styles.errorNote}>✕ Upload failed. Please try again.</div>
-                )}
-              </>
-            )}
-          </div>
+              </div>
+            </div>
+          ) : (
+            // Video player with overlay
+            <div style={styles.videoPlayerWrapper}>
+              <video
+                ref={videoRef}
+                style={styles.videoElement}
+                controls
+                src={uploadedVideoUrl}
+              />
+
+              {/* Processing overlay */}
+              {isProcessing && (
+                <div style={styles.processingOverlay}>
+                  {!processingComplete ? (
+                    <>
+                      <div style={styles.spinner} />
+                      <div style={styles.processingText}>Processing...</div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={styles.checkmark}>✓</div>
+                      <div style={styles.processingText}>Complete</div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Processing jobs monitor */}
-        {Object.keys(processingJobs).length > 0 && (
-          <div style={styles.jobsCard}>
-            <h4 style={{ margin: '0 0 8px 0', color: '#ffd200' }}>Active Jobs</h4>
-            {Object.entries(processingJobs).map(([jobId, job]) => (
-              <div key={jobId} style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginBottom: 6 }}>
-                <div>{jobId.substring(0, 8)}... — {job.status}</div>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Bottom Half: Scrollable Workspace */}
+        <div style={styles.workspaceSection}>
+          <section style={styles.tabCard}>
+            {/* Tab navigation */}
+            <nav style={styles.tabNav}>
+              <TabHeader label="✂️ Trim" active={currentTab === TABS.TRIM} onClick={() => setCurrentTab(TABS.TRIM)} />
+              <TabHeader label="📝 Captions" active={currentTab === TABS.CAPTIONS} onClick={() => setCurrentTab(TABS.CAPTIONS)} />
+              <TabHeader label="🎨 Colors" active={currentTab === TABS.COLORS} onClick={() => setCurrentTab(TABS.COLORS)} />
+              <TabHeader label="📋 Templates" active={currentTab === TABS.TEMPLATES} onClick={() => setCurrentTab(TABS.TEMPLATES)} />
+              <TabHeader label="🤖 AI Editor" active={currentTab === TABS.AI} onClick={() => setCurrentTab(TABS.AI)} />
+              <div style={{ flex: 1 }} />
+              <button style={styles.resetButton} onClick={handleResetWorkspace}>Reset</button>
+            </nav>
 
-        {/* Tabs card */}
-        <section style={styles.tabCard}>
-          <nav style={styles.tabNav}>
-            <TabHeader label="✂️ Trim" active={currentTab === TABS.TRIM} onClick={() => setCurrentTab(TABS.TRIM)} />
-            <TabHeader label="📝 Captions" active={currentTab === TABS.CAPTIONS} onClick={() => setCurrentTab(TABS.CAPTIONS)} />
-            <TabHeader label="🎨 Colors" active={currentTab === TABS.COLORS} onClick={() => setCurrentTab(TABS.COLORS)} />
-            <TabHeader label="📋 Templates" active={currentTab === TABS.TEMPLATES} onClick={() => setCurrentTab(TABS.TEMPLATES)} />
-            <TabHeader label="🤖 AI Editor" active={currentTab === TABS.AI} onClick={() => setCurrentTab(TABS.AI)} />
-            <div style={{ flex: 1 }} />
-            <button style={styles.resetButton} onClick={handleResetWorkspace}>Reset Workspace</button>
-          </nav>
+            {/* Tab content */}
+            <div style={styles.tabContent}>
+              {currentTab === TABS.TRIM && (
+                <div>
+                  <h3 style={styles.sectionTitle}>Video Trimming</h3>
+                  <p style={styles.helperText}>Set the start time and duration for your trim.</p>
 
-          <div style={styles.tabContent}>
-            {currentTab === TABS.TRIM && (
-              <div>
-                <h3 style={styles.sectionTitle}>Video Trimming</h3>
-                <p style={styles.helperText}>Set the start time and duration for your trim.</p>
+                  <div style={styles.field}>
+                    <label style={styles.label}>Start Time (HH:MM:SS)</label>
+                    <input style={styles.input} value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+                  </div>
 
-                <div style={styles.field}>
-                  <label style={styles.label}>Start Time (HH:MM:SS)</label>
-                  <input style={styles.input} value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+                  <div style={styles.field}>
+                    <label style={styles.label}>Duration (seconds)</label>
+                    <input style={styles.input} value={duration} onChange={(e) => setDuration(e.target.value)} />
+                  </div>
+
+                  <div style={{ marginTop: 16 }}>
+                    <button style={styles.trimButton} onClick={handleTrimVideo}>✂️ Trim Video</button>
+                  </div>
                 </div>
+              )}
 
-                <div style={styles.field}>
-                  <label style={styles.label}>Duration (seconds) - Leave empty for full video</label>
-                  <input style={styles.input} value={duration} onChange={(e) => setDuration(e.target.value)} />
+              {currentTab === TABS.CAPTIONS && (
+                <div>
+                  <h3 style={styles.sectionTitle}>Captions</h3>
+                  <p style={styles.helperText}>Generate and preview captions for your video.</p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
+                    <button style={styles.captionButton} onClick={handleGenerateNormalCaptions}>Generate Normal Captions</button>
+                    <button style={styles.captionButton} onClick={handleCreateKineticCaptions}>Create Kinetic Captions</button>
+                    <button style={styles.captionButtonOutline} onClick={handlePreviewKineticCaptions}>Preview Kinetic Style</button>
+                  </div>
                 </div>
+              )}
 
-                <div style={{ marginTop: 16 }}>
-                  <button style={styles.trimButton} onClick={handleTrimVideo}>✂️ Trim Video</button>
+              {currentTab === TABS.COLORS && (
+                <div>
+                  <h3 style={styles.sectionTitle}>Colors</h3>
+                  <p style={styles.helperText}>Apply quick color grades to enhance your footage.</p>
+
+                  <div style={{ marginTop: 12 }}>
+                    <select value={colorPreset} onChange={(e) => setColorPreset(e.target.value)} style={styles.select}>
+                      <option value="vibrant">Vibrant</option>
+                      <option value="cinematic">Cinematic</option>
+                      <option value="flat">Flat</option>
+                      <option value="boost-contrast">Boost Contrast</option>
+                    </select>
+                  </div>
+
+                  <div style={{ marginTop: 14 }}>
+                    <button style={styles.applyColorButton} onClick={handleApplyColorGrade}>Apply Color Grade</button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {currentTab === TABS.CAPTIONS && (
-              <div>
-                <h3 style={styles.sectionTitle}>Captions</h3>
-                <p style={styles.helperText}>Generate and preview captions for your video.</p>
+              {currentTab === TABS.TEMPLATES && (
+                <div>
+                  <h3 style={styles.sectionTitle}>Caption Templates</h3>
+                  <p style={styles.helperText}>Choose a preset style for your captions.</p>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
-                  <button style={styles.captionButton} onClick={handleGenerateNormalCaptions}>Generate Normal Captions</button>
-                  <button style={styles.captionButton} onClick={handleCreateKineticCaptions}>Create Kinetic Captions</button>
-                  <button style={styles.captionButtonOutline} onClick={handlePreviewKineticCaptions}>Preview Kinetic Style</button>
-                </div>
-              </div>
-            )}
-
-            {currentTab === TABS.COLORS && (
-              <div>
-                <h3 style={styles.sectionTitle}>Colors</h3>
-                <p style={styles.helperText}>Apply quick color grades to enhance your footage.</p>
-
-                <div style={{ marginTop: 12 }}>
-                  <select value={colorPreset} onChange={(e) => setColorPreset(e.target.value)} style={styles.select}>
-                    <option value="vibrant">Vibrant</option>
-                    <option value="cinematic">Cinematic</option>
-                    <option value="flat">Flat</option>
-                    <option value="boost-contrast">Boost Contrast</option>
-                  </select>
-                </div>
-
-                <div style={{ marginTop: 14 }}>
-                  <button style={styles.applyColorButton} onClick={handleApplyColorGrade}>Apply Color Grade</button>
-                </div>
-              </div>
-            )}
-
-            {currentTab === TABS.TEMPLATES && (
-              <div>
-                <h3 style={styles.sectionTitle}>Caption Templates</h3>
-                <p style={styles.helperText}>Choose a preset style for your captions.</p>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginTop: 12 }}>
-                  {TEMPLATE_PRESETS.map((t) => {
-                    const selected = selectedTemplate === t.id;
-                    return (
-                      <div
-                        key={t.id}
-                        onClick={() => handleSelectTemplate(t.id)}
-                        style={{
-                          ...styles.templateCard,
-                          boxShadow: selected ? '0 8px 24px rgba(255,210,0,0.2)' : '0 4px 12px rgba(0,0,0,0.3)',
-                          border: selected ? '2px solid #ffd200' : '1px solid rgba(255,255,255,0.06)',
-                          cursor: 'pointer',
-                          background: selected ? 'rgba(255,210,0,0.05)' : 'rgba(255,255,255,0.02)'
-                        }}
-                      >
-                        <div style={{ fontWeight: 700, marginBottom: 4 }}>{t.title}</div>
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>{t.description}</div>
-                        <div style={{ textAlign: 'center' }}>
-                          <span style={{ fontSize: 11, color: selected ? '#ffd200' : 'rgba(255,255,255,0.6)' }}>
-                            {selected ? '✓ Selected' : 'Select'}
-                          </span>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginTop: 12 }}>
+                    {TEMPLATE_PRESETS.map((t) => {
+                      const selected = selectedTemplate === t.id;
+                      return (
+                        <div
+                          key={t.id}
+                          onClick={() => handleSelectTemplate(t.id)}
+                          style={{
+                            ...styles.templateCard,
+                            boxShadow: selected ? '0 8px 24px rgba(255,210,0,0.2)' : '0 4px 12px rgba(0,0,0,0.3)',
+                            border: selected ? '2px solid #ffd200' : '1px solid rgba(255,255,255,0.06)',
+                            background: selected ? 'rgba(255,210,0,0.05)' : 'rgba(255,255,255,0.02)'
+                          }}
+                        >
+                          <div style={{ fontWeight: 700, marginBottom: 4, fontSize: 13 }}>{t.title}</div>
+                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>{t.description}</div>
+                          <div style={{ textAlign: 'center' }}>
+                            <span style={{ fontSize: 10, color: selected ? '#ffd200' : 'rgba(255,255,255,0.6)' }}>
+                              {selected ? '✓ Selected' : 'Select'}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {currentTab === TABS.AI && (
-              <div>
-                <h3 style={styles.sectionTitle}>AI Workspace</h3>
-                <p style={styles.helperText}>AI Waste Detector & Auto-Cut to remove silent/idle sections.</p>
+              {currentTab === TABS.AI && (
+                <div>
+                  <h3 style={styles.sectionTitle}>AI Workspace</h3>
+                  <p style={styles.helperText}>AI Waste Detector & Auto-Cut to remove silent/idle sections.</p>
 
-                <div style={{ marginTop: 12 }}>
-                  <button style={aiRunning ? styles.aiButtonDisabled : styles.aiButton} onClick={() => { if (!aiRunning) handleAiAutoCut(); }} disabled={aiRunning}>
-                    {aiRunning ? 'Running AI...' : 'AI Waste Detector & Auto-Cut'}
-                  </button>
+                  <div style={{ marginTop: 12 }}>
+                    <button style={aiRunning ? styles.aiButtonDisabled : styles.aiButton} onClick={() => { if (!aiRunning) handleAiAutoCut(); }} disabled={aiRunning}>
+                      {aiRunning ? 'Running AI...' : 'AI Waste Detector & Auto-Cut'}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        </section>
-      </main>
+              )}
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
   );
 }
@@ -646,55 +732,112 @@ function TabHeader({ label, active, onClick }) {
 
 /* styles */
 const styles = {
-  app: { fontFamily: "'Inter', Roboto, Arial, sans-serif", background: '#0b0b0c', color: '#fff', minHeight: '100vh', paddingBottom: 24 },
-  
+  appContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100vw',
+    height: '100vh',
+    background: '#0b0b0c',
+    color: '#fff',
+    fontFamily: "'Inter', Roboto, Arial, sans-serif",
+    overflow: 'hidden'
+  },
+
   // Toast styles
   toast: { position: 'fixed', top: 20, right: 20, padding: '12px 16px', borderRadius: 8, fontSize: 14, fontWeight: 600, zIndex: 9999, animation: 'slideIn 0.3s ease-out' },
   toast_success: { background: '#4caf50', color: '#fff' },
   toast_error: { background: '#ff6b6b', color: '#fff' },
   toast_info: { background: '#2196f3', color: '#fff' },
 
-  header: { borderBottom: '1px solid rgba(255,255,255,0.04)', padding: '14px 18px', background: '#0a0a0a' },
-  headerInner: { maxWidth: 980, margin: '0 auto' },
+  // Header
+  header: { borderBottom: '1px solid rgba(255,255,255,0.04)', padding: '12px 18px', background: '#0a0a0a', flexShrink: 0 },
+  headerInner: { maxWidth: '100%', margin: '0 auto' },
   titleRow: { display: 'flex', alignItems: 'center', gap: 10 },
-  controllerEmoji: { fontSize: 22 },
-  title: { margin: 0, fontSize: 22, fontWeight: 800, color: '#ffd200', letterSpacing: 0.2 },
-  subheadline: { color: 'rgba(255,255,255,0.6)', marginTop: 6, fontSize: 13, fontWeight: 500 },
+  controllerEmoji: { fontSize: 20 },
+  title: { margin: 0, fontSize: 20, fontWeight: 800, color: '#ffd200', letterSpacing: 0.2 },
+  subheadline: { color: 'rgba(255,255,255,0.6)', marginTop: 4, fontSize: 12, fontWeight: 500 },
   authRow: { display: 'flex', gap: 8, alignItems: 'center' },
-  welcome: { color: 'rgba(255,255,255,0.9)', fontSize: 14 },
-  
-  main: { maxWidth: 980, margin: '20px auto', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 18 },
-  uploadBox: { background: '#000', borderRadius: 12, border: '4px dashed rgba(255,255,255,0.06)', minHeight: 360, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 28 },
+  welcome: { color: 'rgba(255,255,255,0.9)', fontSize: 13 },
+
+  // Studio container
+  studioContainer: { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' },
+
+  // Video player section (top half)
+  videoPlayerSection: { flex: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', overflow: 'hidden', borderBottom: '1px solid rgba(255,255,255,0.04)' },
+
+  uploadBox: { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 },
   uploadInner: { textAlign: 'center' },
   uploadingText: { color: '#ffd200', fontWeight: 700, fontSize: 18 },
   uploadTitle: { color: '#ffd200', fontSize: 32, fontWeight: 800, marginBottom: 4 },
   uploadSubtitle: { color: 'rgba(255,255,255,0.6)', fontSize: 16, fontWeight: 500, marginBottom: 14 },
   chooseButton: { background: '#ffd200', color: '#080808', padding: '14px 30px', borderRadius: 30, border: 'none', fontWeight: 700, fontSize: 16, cursor: 'pointer' },
-  uploadedNote: { color: '#4caf50', marginTop: 8 },
   errorNote: { color: '#ff6b6b', marginTop: 8 },
-  
-  jobsCard: { background: '#111214', padding: 12, borderRadius: 8, border: '1px solid rgba(255,255,255,0.03)' },
-  
-  tabCard: { background: '#111214', borderRadius: 12, padding: 18, boxShadow: '0 10px 30px rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.03)' },
-  tabNav: { display: 'flex', gap: 18, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 10, alignItems: 'center', overflowX: 'auto' },
-  tabHeader: { paddingBottom: 12, cursor: 'pointer', color: 'rgba(255,255,255,0.75)', fontWeight: 600, position: 'relative', whiteSpace: 'nowrap' },
+
+  videoPlayerWrapper: { position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' },
+  videoElement: { maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' },
+
+  processingOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 100 },
+  spinner: {
+    width: 60,
+    height: 60,
+    border: '4px solid rgba(255,255,255,0.1)',
+    borderTop: '4px solid #ffd200',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite'
+  },
+  checkmark: { fontSize: 60, fontWeight: 800, color: '#4caf50', animation: 'scaleIn 0.4s ease-out' },
+  processingText: { marginTop: 16, fontSize: 14, color: 'rgba(255,255,255,0.9)', fontWeight: 600 },
+
+  // Workspace section (bottom half)
+  workspaceSection: { flex: 0.5, display: 'flex', flexDirection: 'column', overflow: 'hidden' },
+
+  tabCard: { display: 'flex', flexDirection: 'column', height: '100%', background: '#111214', border: '1px solid rgba(255,255,255,0.03)' },
+  tabNav: { display: 'flex', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '10px 12px', alignItems: 'center', flexShrink: 0, overflowX: 'auto' },
+  tabHeader: { paddingBottom: 8, cursor: 'pointer', color: 'rgba(255,255,255,0.75)', fontWeight: 600, position: 'relative', whiteSpace: 'nowrap', fontSize: 13 },
   tabHeaderActive: { color: '#ffd200' },
-  activeUnderline: { height: 3, background: '#ffd200', width: '100%', marginTop: 8, borderRadius: 3 },
-  resetButton: { padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: 12, fontWeight: 600 },
-  tabContent: { paddingTop: 14 },
-  sectionTitle: { margin: 0, fontSize: 20, color: '#ffd200', fontWeight: 800, marginBottom: 6 },
-  helperText: { color: 'rgba(255,255,255,0.6)', marginBottom: 12 },
-  field: { marginBottom: 12, display: 'flex', flexDirection: 'column' },
-  label: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 8 },
-  input: { padding: '12px 14px', borderRadius: 8, background: '#161617', border: '1px solid rgba(255,255,255,0.04)', color: 'white', fontSize: 14 },
-  trimButton: { width: '100%', padding: '14px 16px', background: '#ff6b6b', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 16, cursor: 'pointer' },
-  captionButton: { width: '100%', padding: '12px 14px', background: '#ffd200', color: '#080808', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 15, cursor: 'pointer' },
-  captionButtonOutline: { width: '100%', padding: '12px 14px', background: 'transparent', color: '#ffd200', border: '1px solid rgba(255,210,0,0.16)', borderRadius: 8, fontWeight: 700, fontSize: 15, cursor: 'pointer' },
-  select: { padding: '10px 12px', borderRadius: 8, background: '#0f0f10', color: '#fff', border: '1px solid rgba(255,255,255,0.04)' },
-  applyColorButton: { marginTop: 12, background: '#ffd200', color: '#080808', border: 'none', padding: '10px 14px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', width: '100%' },
-  templateCard: { padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.02)', transition: 'all 0.2s ease' },
-  aiButton: { padding: '14px 18px', borderRadius: 12, border: 'none', background: 'linear-gradient(90deg,#00ff9d,#00e5ff)', color: '#021', fontWeight: 800, cursor: 'pointer', width: '100%' },
-  aiButtonDisabled: { padding: '14px 18px', borderRadius: 12, border: 'none', background: '#444', color: '#999', fontWeight: 800, cursor: 'default', width: '100%' },
-  ghostButton: { padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)', background: 'transparent', color: 'white', cursor: 'pointer' },
-  primaryButton: { padding: '8px 12px', borderRadius: 8, border: 'none', background: 'linear-gradient(90deg,#00e5ff,#7c4dff)', color: '#021', fontWeight: 700, cursor: 'pointer' }
+  activeUnderline: { height: 2, background: '#ffd200', width: '100%', marginTop: 6, borderRadius: 2 },
+  resetButton: { padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: 11, fontWeight: 600 },
+
+  tabContent: { flex: 1, overflow: 'auto', padding: '12px 14px' },
+  sectionTitle: { margin: 0, fontSize: 18, color: '#ffd200', fontWeight: 800, marginBottom: 6 },
+  helperText: { color: 'rgba(255,255,255,0.6)', marginBottom: 12, fontSize: 13 },
+
+  field: { marginBottom: 10, display: 'flex', flexDirection: 'column' },
+  label: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 6 },
+  input: { padding: '10px 12px', borderRadius: 6, background: '#161617', border: '1px solid rgba(255,255,255,0.04)', color: 'white', fontSize: 13 },
+
+  trimButton: { width: '100%', padding: '12px 14px', background: '#ff6b6b', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: 'pointer' },
+  captionButton: { width: '100%', padding: '10px 12px', background: '#ffd200', color: '#080808', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 13, cursor: 'pointer' },
+  captionButtonOutline: { width: '100%', padding: '10px 12px', background: 'transparent', color: '#ffd200', border: '1px solid rgba(255,210,0,0.16)', borderRadius: 6, fontWeight: 700, fontSize: 13, cursor: 'pointer' },
+
+  select: { padding: '8px 10px', borderRadius: 6, background: '#0f0f10', color: '#fff', border: '1px solid rgba(255,255,255,0.04)', fontSize: 12 },
+  applyColorButton: { background: '#ffd200', color: '#080808', border: 'none', padding: '8px 12px', borderRadius: 6, fontWeight: 700, cursor: 'pointer', width: '100%', fontSize: 13 },
+
+  templateCard: { padding: 10, borderRadius: 8, background: 'rgba(255,255,255,0.02)', transition: 'all 0.2s ease', cursor: 'pointer' },
+
+  aiButton: { padding: '12px 14px', borderRadius: 8, border: 'none', background: 'linear-gradient(90deg,#00ff9d,#00e5ff)', color: '#021', fontWeight: 800, cursor: 'pointer', width: '100%', fontSize: 13 },
+  aiButtonDisabled: { padding: '12px 14px', borderRadius: 8, border: 'none', background: '#444', color: '#999', fontWeight: 800, cursor: 'default', width: '100%', fontSize: 13 },
+
+  ghostButton: { padding: '8px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.06)', background: 'transparent', color: 'white', cursor: 'pointer', fontSize: 12, fontWeight: 600 },
+  primaryButton: { padding: '8px 12px', borderRadius: 6, border: 'none', background: 'linear-gradient(90deg,#00e5ff,#7c4dff)', color: '#021', fontWeight: 700, cursor: 'pointer', fontSize: 12 }
 };
+
+// Add CSS animations to document
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes scaleIn {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes slideIn {
+      0% { transform: translateX(100%); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+  `;
+  document.head.appendChild(style);
+          }
