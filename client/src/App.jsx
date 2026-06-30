@@ -11,14 +11,43 @@ import {
 import './styles.css';
 
 /**
- * Final UI: Clean screenshot layout + automation
- * - Auto-upload on file select (no manual Upload button)
- * - Header auth (Register / Login / Welcome)
- * - Tabs: Trim, Captions, Colors, AI Editor
- * - AI Editor triggers job: { op: 'ai_cleanup' }
+ * Updated UI: Professional, non-gaming-specific
+ * - Clean upload section with "अपलोड वीडियो" + "जिपजॉप एआई एडिटर"
+ * - 5 tabs: Trim, Captions, Colors, Templates, AI Editor
  */
 
-const TABS = { TRIM: 'trim', CAPTIONS: 'captions', COLORS: 'colors', AI: 'ai' };
+const TABS = { TRIM: 'trim', CAPTIONS: 'captions', COLORS: 'colors', TEMPLATES: 'templates', AI: 'ai' };
+
+const TEMPLATE_PRESETS = [
+  {
+    id: 'cyberpunk',
+    title: 'Cyberpunk Glow',
+    description: 'Neon violet/blue tracking text with glow',
+    style: { font: 'Orbitron', size: 56, color: '&H00FF66FF', outline: 3 },
+    preset: 'cyberpunk'
+  },
+  {
+    id: 'esports',
+    title: 'Esports Impact',
+    description: 'Aggressive uppercase pop-ups for highlights',
+    style: { font: 'Impact', size: 64, color: '&H00FFFFFF', outline: 4 },
+    preset: 'esports'
+  },
+  {
+    id: 'anime',
+    title: 'Anime Pop',
+    description: 'Springy cartoon style with bounce animations',
+    style: { font: 'DejaVu Sans', size: 52, color: '&H00FFFF88', outline: 2 },
+    preset: 'anime'
+  },
+  {
+    id: 'minimal',
+    title: 'Minimal Clean',
+    description: 'Simple, elegant sans-serif captions',
+    style: { font: 'DejaVu Sans', size: 44, color: '&H00FFFFFF', outline: 1 },
+    preset: 'minimal'
+  }
+];
 
 export default function App() {
   // load Inter for premium typography
@@ -39,8 +68,8 @@ export default function App() {
 
   // File / upload state
   const fileInputRef = useRef(null);
-  const [localFile, setLocalFile] = useState(null); // File object before upload
-  const [uploadedFilename, setUploadedFilename] = useState(null); // returned filename or name
+  const [localFile, setLocalFile] = useState(null);
+  const [uploadedFilename, setUploadedFilename] = useState(null);
   const [uploadStatus, setUploadStatus] = useState('idle'); // idle | uploading | uploaded | error
 
   // Tab & content states
@@ -56,12 +85,15 @@ export default function App() {
   // Colors
   const [colorPreset, setColorPreset] = useState('vibrant');
 
+  // Templates
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+
   // AI running
   const [aiRunning, setAiRunning] = useState(false);
 
   // ----- Auth handlers -----
   async function handleRegister() {
-    const u = prompt('username?') || `user${Math.floor(Math.random()*1000)}`;
+    const u = prompt('username?') || `user${Math.floor(Math.random() * 1000)}`;
     const p = prompt('password?') || 'pass';
     try {
       const r = await apiRegister(u, p);
@@ -104,14 +136,11 @@ export default function App() {
     if (!f) return;
     setLocalFile(f);
 
-    // Immediately upload (auto-upload flow)
-    // Require auth token for upload (if your backend allows anonymous uploads, remove this guard)
+    // Auto-upload flow
     if (!token) {
-      // If not logged in, prompt to login
       const ok = window.confirm('You must be logged in to upload. Login now?');
       if (ok) {
         await handleLogin();
-        // if still no token after login attempt, abort
         if (!token) {
           setUploadStatus('error');
           alert('Upload cancelled: not logged in');
@@ -127,7 +156,6 @@ export default function App() {
     // Start upload
     try {
       setUploadStatus('uploading');
-      // call apiUpload(token, file)
       const rsp = await apiUpload(token, f);
       if (rsp && rsp.ok) {
         const fn = rsp.filename || f.name;
@@ -188,7 +216,7 @@ export default function App() {
     });
 
     try {
-      const payload = { filename: uploadedFilename, captions: caps, preset: 'slide-in', burn: false };
+      const payload = { filename: uploadedFilename, captions: caps, preset: selectedTemplate || 'slide-in', burn: false };
       const rsp = await createKineticCaption(token, payload);
       if (rsp && rsp.ok) alert('Kinetic created: ' + (rsp.ass || 'ok'));
       else alert('Failed: ' + JSON.stringify(rsp));
@@ -208,7 +236,7 @@ export default function App() {
     });
 
     try {
-      const payload = { filename: uploadedFilename, captions: caps, preset: 'slide-in', start: caps[0]?.start || 0, duration: 6 };
+      const payload = { filename: uploadedFilename, captions: caps, preset: selectedTemplate || 'slide-in', start: caps[0]?.start || 0, duration: 6 };
       const rsp = await previewKineticCaption(token, payload);
       if (rsp && rsp.ok && rsp.preview) {
         window.open(rsp.preview, '_blank');
@@ -221,7 +249,7 @@ export default function App() {
     }
   }
 
-  // ----- Colors action (simple enqueue) -----
+  // ----- Colors action -----
   async function handleApplyColorGrade() {
     if (!uploadedFilename) return alert('Please upload a video first');
     if (!token) return alert('Please login first');
@@ -234,6 +262,11 @@ export default function App() {
       console.error(err);
       alert('Error: ' + String(err));
     }
+  }
+
+  // ----- Templates action -----
+  function handleSelectTemplate(templateId) {
+    setSelectedTemplate(templateId);
   }
 
   // ----- AI editor action -----
@@ -283,12 +316,12 @@ export default function App() {
         {/* Upload box */}
         <div style={styles.uploadBox}>
           <div style={styles.uploadInner}>
-            {/* Show uploading state or uploaded filename */}
             {uploadStatus === 'uploading' ? (
               <div style={styles.uploadingText}>Uploading video...</div>
             ) : (
               <>
-                <div style={styles.hindiText}>अपनी GTA V या गेमप्ले वीडियो यहाँ लोड करें</div>
+                <div style={styles.uploadTitle}>अपलोड वीडियो</div>
+                <div style={styles.uploadSubtitle}>जिपजॉप एआई एडिटर</div>
                 <div style={{ height: 18 }} />
                 <button style={styles.chooseButton} onClick={handleChooseClick}>
                   Choose Video File
@@ -319,14 +352,15 @@ export default function App() {
             <TabHeader label="✂️ Trim" active={currentTab === TABS.TRIM} onClick={() => setCurrentTab(TABS.TRIM)} />
             <TabHeader label="📝 Captions" active={currentTab === TABS.CAPTIONS} onClick={() => setCurrentTab(TABS.CAPTIONS)} />
             <TabHeader label="🎨 Colors" active={currentTab === TABS.COLORS} onClick={() => setCurrentTab(TABS.COLORS)} />
+            <TabHeader label="📋 Templates" active={currentTab === TABS.TEMPLATES} onClick={() => setCurrentTab(TABS.TEMPLATES)} />
             <TabHeader label="🤖 AI Editor" active={currentTab === TABS.AI} onClick={() => setCurrentTab(TABS.AI)} />
           </nav>
 
           <div style={styles.tabContent}>
             {currentTab === TABS.TRIM && (
               <div>
-                <h3 style={styles.sectionTitle}>Video Trimming (कस्टम ट्रिम)</h3>
-                <p style={styles.helperText}>शुरुआत का समय और अवधि सेट करें।</p>
+                <h3 style={styles.sectionTitle}>Video Trimming</h3>
+                <p style={styles.helperText}>Set the start time and duration for your trim.</p>
 
                 <div style={styles.field}>
                   <label style={styles.label}>Start Time (HH:MM:SS)</label>
@@ -347,7 +381,7 @@ export default function App() {
             {currentTab === TABS.CAPTIONS && (
               <div>
                 <h3 style={styles.sectionTitle}>Captions</h3>
-                <p style={styles.helperText}>Generate and preview captions for your gameplay.</p>
+                <p style={styles.helperText}>Generate and preview captions for your video.</p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
                   <button style={styles.captionButton} onClick={handleGenerateNormalCaptions}>Generate Normal Captions</button>
@@ -360,7 +394,7 @@ export default function App() {
             {currentTab === TABS.COLORS && (
               <div>
                 <h3 style={styles.sectionTitle}>Colors</h3>
-                <p style={styles.helperText}>Apply quick color grades to improve your gameplay footage.</p>
+                <p style={styles.helperText}>Apply quick color grades to enhance your footage.</p>
 
                 <div style={{ marginTop: 12 }}>
                   <select value={colorPreset} onChange={(e) => setColorPreset(e.target.value)} style={styles.select}>
@@ -377,10 +411,44 @@ export default function App() {
               </div>
             )}
 
+            {currentTab === TABS.TEMPLATES && (
+              <div>
+                <h3 style={styles.sectionTitle}>Caption Templates</h3>
+                <p style={styles.helperText}>Choose a preset style for your captions.</p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginTop: 12 }}>
+                  {TEMPLATE_PRESETS.map((t) => {
+                    const selected = selectedTemplate === t.id;
+                    return (
+                      <div
+                        key={t.id}
+                        onClick={() => handleSelectTemplate(t.id)}
+                        style={{
+                          ...styles.templateCard,
+                          boxShadow: selected ? '0 8px 24px rgba(255,210,0,0.2)' : '0 4px 12px rgba(0,0,0,0.3)',
+                          border: selected ? '2px solid #ffd200' : '1px solid rgba(255,255,255,0.06)',
+                          cursor: 'pointer',
+                          background: selected ? 'rgba(255,210,0,0.05)' : 'rgba(255,255,255,0.02)'
+                        }}
+                      >
+                        <div style={{ fontWeight: 700, marginBottom: 4 }}>{t.title}</div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>{t.description}</div>
+                        <div style={{ textAlign: 'center' }}>
+                          <span style={{ fontSize: 11, color: selected ? '#ffd200' : 'rgba(255,255,255,0.6)' }}>
+                            {selected ? '✓ Selected' : 'Select'}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {currentTab === TABS.AI && (
               <div>
                 <h3 style={styles.sectionTitle}>AI Workspace</h3>
-                <p style={styles.helperText}>AI Waste Detector & Auto-Cut to remove silent/idle gameplay.</p>
+                <p style={styles.helperText}>AI Waste Detector & Auto-Cut to remove silent/idle sections.</p>
 
                 <div style={{ marginTop: 12 }}>
                   <button style={aiRunning ? styles.aiButtonDisabled : styles.aiButton} onClick={() => { if (!aiRunning) handleAiAutoCut(); }} disabled={aiRunning}>
@@ -406,7 +474,7 @@ function TabHeader({ label, active, onClick }) {
   );
 }
 
-/* styles (matching screenshot look & feel) */
+/* styles */
 const styles = {
   app: { fontFamily: "'Inter', Roboto, Arial, sans-serif", background: '#0b0b0c', color: '#fff', minHeight: '100vh', paddingBottom: 24 },
   header: { borderBottom: '1px solid rgba(255,255,255,0.04)', padding: '14px 18px', background: '#0a0a0a' },
@@ -421,13 +489,14 @@ const styles = {
   uploadBox: { background: '#000', borderRadius: 12, border: '4px dashed rgba(255,255,255,0.06)', minHeight: 360, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 28 },
   uploadInner: { textAlign: 'center' },
   uploadingText: { color: '#ffd200', fontWeight: 700, fontSize: 18 },
-  hindiText: { color: 'rgba(255,255,255,0.6)', fontSize: 20, fontWeight: 500, marginBottom: 14 },
+  uploadTitle: { color: '#ffd200', fontSize: 32, fontWeight: 800, marginBottom: 4 },
+  uploadSubtitle: { color: 'rgba(255,255,255,0.6)', fontSize: 16, fontWeight: 500, marginBottom: 14 },
   chooseButton: { background: '#ffd200', color: '#080808', padding: '14px 30px', borderRadius: 30, border: 'none', fontWeight: 700, fontSize: 16, cursor: 'pointer' },
   uploadedNote: { color: 'rgba(255,255,255,0.85)', marginTop: 8 },
   errorNote: { color: '#ff6b6b', marginTop: 8 },
   tabCard: { background: '#111214', borderRadius: 12, padding: 18, boxShadow: '0 10px 30px rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.03)' },
-  tabNav: { display: 'flex', gap: 18, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 10, alignItems: 'center' },
-  tabHeader: { paddingBottom: 12, cursor: 'pointer', color: 'rgba(255,255,255,0.75)', fontWeight: 600, position: 'relative' },
+  tabNav: { display: 'flex', gap: 18, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 10, alignItems: 'center', overflowX: 'auto' },
+  tabHeader: { paddingBottom: 12, cursor: 'pointer', color: 'rgba(255,255,255,0.75)', fontWeight: 600, position: 'relative', whiteSpace: 'nowrap' },
   tabHeaderActive: { color: '#ffd200' },
   activeUnderline: { height: 3, background: '#ffd200', width: '100%', marginTop: 8, borderRadius: 3 },
   tabContent: { paddingTop: 14 },
@@ -440,9 +509,10 @@ const styles = {
   captionButton: { width: '100%', padding: '12px 14px', background: '#ffd200', color: '#080808', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 15, cursor: 'pointer' },
   captionButtonOutline: { width: '100%', padding: '12px 14px', background: 'transparent', color: '#ffd200', border: '1px solid rgba(255,210,0,0.16)', borderRadius: 8, fontWeight: 700, fontSize: 15, cursor: 'pointer' },
   select: { padding: '10px 12px', borderRadius: 8, background: '#0f0f10', color: '#fff', border: '1px solid rgba(255,255,255,0.04)' },
-  applyColorButton: { marginTop: 12, background: '#ffd200', color: '#080808', border: 'none', padding: '10px 14px', borderRadius: 8, fontWeight: 700, cursor: 'pointer' },
-  aiButton: { padding: '14px 18px', borderRadius: 12, border: 'none', background: 'linear-gradient(90deg,#00ff9d,#00e5ff)', color: '#021', fontWeight: 800, cursor: 'pointer' },
-  aiButtonDisabled: { padding: '14px 18px', borderRadius: 12, border: 'none', background: '#444', color: '#999', fontWeight: 800, cursor: 'default' },
+  applyColorButton: { marginTop: 12, background: '#ffd200', color: '#080808', border: 'none', padding: '10px 14px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', width: '100%' },
+  templateCard: { padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.02)', transition: 'all 0.2s ease' },
+  aiButton: { padding: '14px 18px', borderRadius: 12, border: 'none', background: 'linear-gradient(90deg,#00ff9d,#00e5ff)', color: '#021', fontWeight: 800, cursor: 'pointer', width: '100%' },
+  aiButtonDisabled: { padding: '14px 18px', borderRadius: 12, border: 'none', background: '#444', color: '#999', fontWeight: 800, cursor: 'default', width: '100%' },
   ghostButton: { padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)', background: 'transparent', color: 'white', cursor: 'pointer' },
   primaryButton: { padding: '8px 12px', borderRadius: 8, border: 'none', background: 'linear-gradient(90deg,#00e5ff,#7c4dff)', color: '#021', fontWeight: 700, cursor: 'pointer' }
 };
