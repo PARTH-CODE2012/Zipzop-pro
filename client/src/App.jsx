@@ -11,9 +11,11 @@ import {
 import './styles.css';
 
 /**
- * Updated UI: Professional, non-gaming-specific
- * - Clean upload section with "अपलोड वीडियो" + "जिपजॉप एआई एडिटर"
- * - 5 tabs: Trim, Captions, Colors, Templates, AI Editor
+ * Updated UI: No alerts, localStorage persistence, silent background processing
+ * - Removes all window.alert() calls
+ * - Shows toast/feedback UI instead
+ * - Persists uploaded filename, tab state, captions to localStorage
+ * - Rehydrates on mount
  */
 
 const TABS = { TRIM: 'trim', CAPTIONS: 'captions', COLORS: 'colors', TEMPLATES: 'templates', AI: 'ai' };
@@ -49,8 +51,19 @@ const TEMPLATE_PRESETS = [
   }
 ];
 
+// localStorage keys
+const STORAGE_KEYS = {
+  UPLOADED_FILENAME: 'zipzop_uploaded_filename',
+  CURRENT_TAB: 'zipzop_current_tab',
+  CAPTION_TEXT: 'zipzop_caption_text',
+  SELECTED_TEMPLATE: 'zipzop_selected_template',
+  COLOR_PRESET: 'zipzop_color_preset',
+  START_TIME: 'zipzop_start_time',
+  DURATION: 'zipzop_duration'
+};
+
 export default function App() {
-  // load Inter for premium typography
+  // Load Inter font
   useEffect(() => {
     const id = 'zipzop-inter-font';
     if (!document.getElementById(id)) {
@@ -72,6 +85,10 @@ export default function App() {
   const [uploadedFilename, setUploadedFilename] = useState(null);
   const [uploadStatus, setUploadStatus] = useState('idle'); // idle | uploading | uploaded | error
 
+  // Toast/feedback state
+  const [toast, setToast] = useState(null); // { type: 'success'|'error'|'info', message, id }
+  const [processingJobs, setProcessingJobs] = useState({}); // { jobId: { status, progress } }
+
   // Tab & content states
   const [currentTab, setCurrentTab] = useState(TABS.TRIM);
 
@@ -91,6 +108,80 @@ export default function App() {
   // AI running
   const [aiRunning, setAiRunning] = useState(false);
 
+  // Rehydrate from localStorage on mount
+  useEffect(() => {
+    const savedFilename = localStorage.getItem(STORAGE_KEYS.UPLOADED_FILENAME);
+    const savedTab = localStorage.getItem(STORAGE_KEYS.CURRENT_TAB);
+    const savedCaption = localStorage.getItem(STORAGE_KEYS.CAPTION_TEXT);
+    const savedTemplate = localStorage.getItem(STORAGE_KEYS.SELECTED_TEMPLATE);
+    const savedColor = localStorage.getItem(STORAGE_KEYS.COLOR_PRESET);
+    const savedStartTime = localStorage.getItem(STORAGE_KEYS.START_TIME);
+    const savedDuration = localStorage.getItem(STORAGE_KEYS.DURATION);
+
+    if (savedFilename) setUploadedFilename(savedFilename);
+    if (savedTab) setCurrentTab(savedTab);
+    if (savedCaption) setCaptionText(savedCaption);
+    if (savedTemplate) setSelectedTemplate(savedTemplate);
+    if (savedColor) setColorPreset(savedColor);
+    if (savedStartTime) setStartTime(savedStartTime);
+    if (savedDuration) setDuration(savedDuration);
+  }, []);
+
+  // Persist state to localStorage
+  useEffect(() => {
+    if (uploadedFilename) localStorage.setItem(STORAGE_KEYS.UPLOADED_FILENAME, uploadedFilename);
+  }, [uploadedFilename]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.CURRENT_TAB, currentTab);
+  }, [currentTab]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.CAPTION_TEXT, captionText);
+  }, [captionText]);
+
+  useEffect(() => {
+    if (selectedTemplate) localStorage.setItem(STORAGE_KEYS.SELECTED_TEMPLATE, selectedTemplate);
+  }, [selectedTemplate]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.COLOR_PRESET, colorPreset);
+  }, [colorPreset]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.START_TIME, startTime);
+  }, [startTime]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.DURATION, duration);
+  }, [duration]);
+
+  // Toast helper
+  function showToast(type, message) {
+    const id = Date.now();
+    setToast({ type, message, id });
+    setTimeout(() => setToast(null), 3500);
+  }
+
+  // Clear workspace
+  function handleResetWorkspace() {
+    if (window.confirm('Clear all uploaded files and workspace state?')) {
+      setUploadedFilename(null);
+      setLocalFile(null);
+      setUploadStatus('idle');
+      setProcessingJobs({});
+      setCaptionText('0|4|Hello world');
+      setSelectedTemplate(null);
+      setStartTime('00:00:00');
+      setDuration('30');
+      setColorPreset('vibrant');
+      setCurrentTab(TABS.TRIM);
+      // Clear localStorage
+      Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
+      showToast('info', 'Workspace cleared');
+    }
+  }
+
   // ----- Auth handlers -----
   async function handleRegister() {
     const u = prompt('username?') || `user${Math.floor(Math.random() * 1000)}`;
@@ -98,13 +189,13 @@ export default function App() {
     try {
       const r = await apiRegister(u, p);
       if (r && r.id) {
-        alert('Registered: ' + r.username);
+        showToast('success', 'Registered: ' + r.username);
       } else {
-        alert('Register response: ' + JSON.stringify(r));
+        showToast('error', 'Register failed: ' + JSON.stringify(r));
       }
     } catch (err) {
       console.error(err);
-      alert('Register error: ' + String(err));
+      showToast('error', 'Register error: ' + String(err));
     }
   }
 
@@ -116,13 +207,13 @@ export default function App() {
       if (r && r.token) {
         setToken(r.token);
         setUsername(r.username || u);
-        alert('Logged in as ' + (r.username || u));
+        showToast('success', 'Logged in as ' + (r.username || u));
       } else {
-        alert('Login failed: ' + JSON.stringify(r));
+        showToast('error', 'Login failed: ' + JSON.stringify(r));
       }
     } catch (err) {
       console.error(err);
-      alert('Login error: ' + String(err));
+      showToast('error', 'Login error: ' + String(err));
     }
   }
 
@@ -136,21 +227,17 @@ export default function App() {
     if (!f) return;
     setLocalFile(f);
 
+    // If new file, clear old uploaded state
+    if (uploadedFilename) {
+      setUploadedFilename(null);
+      localStorage.removeItem(STORAGE_KEYS.UPLOADED_FILENAME);
+      setProcessingJobs({});
+    }
+
     // Auto-upload flow
     if (!token) {
-      const ok = window.confirm('You must be logged in to upload. Login now?');
-      if (ok) {
-        await handleLogin();
-        if (!token) {
-          setUploadStatus('error');
-          alert('Upload cancelled: not logged in');
-          return;
-        }
-      } else {
-        setUploadStatus('error');
-        alert('Upload cancelled: login required');
-        return;
-      }
+      showToast('error', 'Login required to upload');
+      return;
     }
 
     // Start upload
@@ -161,54 +248,80 @@ export default function App() {
         const fn = rsp.filename || f.name;
         setUploadedFilename(fn);
         setUploadStatus('uploaded');
+        showToast('success', 'Video uploaded: ' + fn);
       } else {
         console.warn('Upload response', rsp);
         setUploadStatus('error');
-        alert('Upload failed: ' + JSON.stringify(rsp));
+        showToast('error', 'Upload failed: ' + JSON.stringify(rsp));
       }
     } catch (err) {
       console.error('Upload error', err);
       setUploadStatus('error');
-      alert('Upload error: ' + String(err));
+      showToast('error', 'Upload error: ' + String(err));
     }
   }
 
   // ----- Trim action -----
   async function handleTrimVideo() {
-    if (!uploadedFilename) return alert('Please upload a video first');
-    if (!token) return alert('Please login first');
+    if (!uploadedFilename) {
+      showToast('error', 'Please upload a video first');
+      return;
+    }
+    if (!token) {
+      showToast('error', 'Please login first');
+      return;
+    }
     try {
       const ops = [{ op: 'trim', start: startTime, duration: Number(duration), reencode: true }];
       const rsp = await createJob(token, uploadedFilename, ops);
       if (rsp && rsp.ok) {
-        alert('Trim job queued: ' + (rsp.jobId || rsp.id || 'unknown'));
+        const jobId = rsp.jobId || rsp.id || 'unknown';
+        setProcessingJobs((prev) => ({ ...prev, [jobId]: { status: 'queued', progress: 0 } }));
+        showToast('success', 'Trim job queued');
       } else {
-        alert('Trim failed: ' + JSON.stringify(rsp));
+        showToast('error', 'Trim failed: ' + JSON.stringify(rsp));
       }
     } catch (err) {
       console.error(err);
-      alert('Trim error: ' + String(err));
+      showToast('error', 'Trim error: ' + String(err));
     }
   }
 
   // ----- Captions actions -----
   async function handleGenerateNormalCaptions() {
-    if (!uploadedFilename) return alert('Please upload a video first');
-    if (!token) return alert('Please login first');
+    if (!uploadedFilename) {
+      showToast('error', 'Please upload a video first');
+      return;
+    }
+    if (!token) {
+      showToast('error', 'Please login first');
+      return;
+    }
     try {
       const ops = [{ op: 'auto_caption' }];
       const rsp = await createJob(token, uploadedFilename, ops);
-      if (rsp && rsp.ok) alert('Normal captions job queued: ' + (rsp.jobId || rsp.id));
-      else alert('Failed to queue captions: ' + JSON.stringify(rsp));
+      if (rsp && rsp.ok) {
+        const jobId = rsp.jobId || rsp.id || 'unknown';
+        setProcessingJobs((prev) => ({ ...prev, [jobId]: { status: 'processing', progress: 0 } }));
+        showToast('success', 'Generating normal captions...');
+      } else {
+        showToast('error', 'Failed to queue captions: ' + JSON.stringify(rsp));
+      }
     } catch (err) {
       console.error(err);
-      alert('Error: ' + String(err));
+      showToast('error', 'Error: ' + String(err));
     }
   }
 
   async function handleCreateKineticCaptions() {
-    if (!uploadedFilename) return alert('Please upload a video first');
-    if (!token) return alert('Please login first');
+    if (!uploadedFilename) {
+      showToast('error', 'Please upload a video first');
+      return;
+    }
+    if (!token) {
+      showToast('error', 'Please login first');
+      return;
+    }
 
     const caps = captionText.split('\n').map((l) => {
       const parts = l.split('|');
@@ -218,17 +331,26 @@ export default function App() {
     try {
       const payload = { filename: uploadedFilename, captions: caps, preset: selectedTemplate || 'slide-in', burn: false };
       const rsp = await createKineticCaption(token, payload);
-      if (rsp && rsp.ok) alert('Kinetic created: ' + (rsp.ass || 'ok'));
-      else alert('Failed: ' + JSON.stringify(rsp));
+      if (rsp && rsp.ok) {
+        showToast('success', 'Kinetic captions created');
+      } else {
+        showToast('error', 'Failed: ' + JSON.stringify(rsp));
+      }
     } catch (err) {
       console.error(err);
-      alert('Error: ' + String(err));
+      showToast('error', 'Error: ' + String(err));
     }
   }
 
   async function handlePreviewKineticCaptions() {
-    if (!uploadedFilename) return alert('Please upload a video first');
-    if (!token) return alert('Please login first');
+    if (!uploadedFilename) {
+      showToast('error', 'Please upload a video first');
+      return;
+    }
+    if (!token) {
+      showToast('error', 'Please login first');
+      return;
+    }
 
     const caps = captionText.split('\n').map((l) => {
       const parts = l.split('|');
@@ -236,52 +358,77 @@ export default function App() {
     });
 
     try {
+      showToast('info', 'Generating preview...');
       const payload = { filename: uploadedFilename, captions: caps, preset: selectedTemplate || 'slide-in', start: caps[0]?.start || 0, duration: 6 };
       const rsp = await previewKineticCaption(token, payload);
       if (rsp && rsp.ok && rsp.preview) {
+        showToast('success', 'Preview ready');
         window.open(rsp.preview, '_blank');
       } else {
-        alert('Preview failed: ' + JSON.stringify(rsp));
+        showToast('error', 'Preview failed: ' + JSON.stringify(rsp));
       }
     } catch (err) {
       console.error(err);
-      alert('Preview error: ' + String(err));
+      showToast('error', 'Preview error: ' + String(err));
     }
   }
 
   // ----- Colors action -----
   async function handleApplyColorGrade() {
-    if (!uploadedFilename) return alert('Please upload a video first');
-    if (!token) return alert('Please login first');
+    if (!uploadedFilename) {
+      showToast('error', 'Please upload a video first');
+      return;
+    }
+    if (!token) {
+      showToast('error', 'Please login first');
+      return;
+    }
     try {
       const ops = [{ op: 'color', preset: colorPreset }];
       const rsp = await createJob(token, uploadedFilename, ops);
-      if (rsp && rsp.ok) alert('Color job queued: ' + (rsp.jobId || rsp.id));
-      else alert('Failed: ' + JSON.stringify(rsp));
+      if (rsp && rsp.ok) {
+        const jobId = rsp.jobId || rsp.id || 'unknown';
+        setProcessingJobs((prev) => ({ ...prev, [jobId]: { status: 'processing', progress: 0 } }));
+        showToast('success', 'Color grade job queued');
+      } else {
+        showToast('error', 'Failed: ' + JSON.stringify(rsp));
+      }
     } catch (err) {
       console.error(err);
-      alert('Error: ' + String(err));
+      showToast('error', 'Error: ' + String(err));
     }
   }
 
   // ----- Templates action -----
   function handleSelectTemplate(templateId) {
     setSelectedTemplate(templateId);
+    showToast('info', 'Template selected');
   }
 
   // ----- AI editor action -----
   async function handleAiAutoCut() {
-    if (!uploadedFilename) return alert('Please upload a video first');
-    if (!token) return alert('Please login first');
+    if (!uploadedFilename) {
+      showToast('error', 'Please upload a video first');
+      return;
+    }
+    if (!token) {
+      showToast('error', 'Please login first');
+      return;
+    }
     setAiRunning(true);
     try {
       const ops = [{ op: 'ai_cleanup' }];
       const rsp = await createJob(token, uploadedFilename, ops);
-      if (rsp && rsp.ok) alert('AI Auto-Cut job queued: ' + (rsp.jobId || rsp.id));
-      else alert('Failed: ' + JSON.stringify(rsp));
+      if (rsp && rsp.ok) {
+        const jobId = rsp.jobId || rsp.id || 'unknown';
+        setProcessingJobs((prev) => ({ ...prev, [jobId]: { status: 'processing', progress: 0 } }));
+        showToast('success', 'AI Auto-Cut job started');
+      } else {
+        showToast('error', 'Failed: ' + JSON.stringify(rsp));
+      }
     } catch (err) {
       console.error(err);
-      alert('AI error: ' + String(err));
+      showToast('error', 'AI error: ' + String(err));
     } finally {
       setAiRunning(false);
     }
@@ -290,6 +437,16 @@ export default function App() {
   // Render
   return (
     <div style={styles.app}>
+      {/* Toast notification */}
+      {toast && (
+        <div style={{ ...styles.toast, ...styles[`toast_${toast.type}`] }}>
+          {toast.type === 'success' && '✓ '}
+          {toast.type === 'error' && '✕ '}
+          {toast.type === 'info' && 'ℹ '}
+          {toast.message}
+        </div>
+      )}
+
       {/* Header */}
       <header style={styles.header}>
         <div style={styles.headerInner}>
@@ -326,7 +483,6 @@ export default function App() {
                 <button style={styles.chooseButton} onClick={handleChooseClick}>
                   Choose Video File
                 </button>
-                {/* Hidden input triggers auto upload onChange */}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -336,15 +492,27 @@ export default function App() {
                 />
                 <div style={{ height: 12 }} />
                 {uploadStatus === 'uploaded' && (
-                  <div style={styles.uploadedNote}>Uploaded: {uploadedFilename}</div>
+                  <div style={styles.uploadedNote}>✓ Uploaded: {uploadedFilename}</div>
                 )}
                 {uploadStatus === 'error' && (
-                  <div style={styles.errorNote}>Upload failed. Please try again.</div>
+                  <div style={styles.errorNote}>✕ Upload failed. Please try again.</div>
                 )}
               </>
             )}
           </div>
         </div>
+
+        {/* Processing jobs monitor */}
+        {Object.keys(processingJobs).length > 0 && (
+          <div style={styles.jobsCard}>
+            <h4 style={{ margin: '0 0 8px 0', color: '#ffd200' }}>Active Jobs</h4>
+            {Object.entries(processingJobs).map(([jobId, job]) => (
+              <div key={jobId} style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginBottom: 6 }}>
+                <div>{jobId.substring(0, 8)}... — {job.status}</div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Tabs card */}
         <section style={styles.tabCard}>
@@ -354,6 +522,8 @@ export default function App() {
             <TabHeader label="🎨 Colors" active={currentTab === TABS.COLORS} onClick={() => setCurrentTab(TABS.COLORS)} />
             <TabHeader label="📋 Templates" active={currentTab === TABS.TEMPLATES} onClick={() => setCurrentTab(TABS.TEMPLATES)} />
             <TabHeader label="🤖 AI Editor" active={currentTab === TABS.AI} onClick={() => setCurrentTab(TABS.AI)} />
+            <div style={{ flex: 1 }} />
+            <button style={styles.resetButton} onClick={handleResetWorkspace}>Reset Workspace</button>
           </nav>
 
           <div style={styles.tabContent}>
@@ -477,6 +647,13 @@ function TabHeader({ label, active, onClick }) {
 /* styles */
 const styles = {
   app: { fontFamily: "'Inter', Roboto, Arial, sans-serif", background: '#0b0b0c', color: '#fff', minHeight: '100vh', paddingBottom: 24 },
+  
+  // Toast styles
+  toast: { position: 'fixed', top: 20, right: 20, padding: '12px 16px', borderRadius: 8, fontSize: 14, fontWeight: 600, zIndex: 9999, animation: 'slideIn 0.3s ease-out' },
+  toast_success: { background: '#4caf50', color: '#fff' },
+  toast_error: { background: '#ff6b6b', color: '#fff' },
+  toast_info: { background: '#2196f3', color: '#fff' },
+
   header: { borderBottom: '1px solid rgba(255,255,255,0.04)', padding: '14px 18px', background: '#0a0a0a' },
   headerInner: { maxWidth: 980, margin: '0 auto' },
   titleRow: { display: 'flex', alignItems: 'center', gap: 10 },
@@ -485,6 +662,7 @@ const styles = {
   subheadline: { color: 'rgba(255,255,255,0.6)', marginTop: 6, fontSize: 13, fontWeight: 500 },
   authRow: { display: 'flex', gap: 8, alignItems: 'center' },
   welcome: { color: 'rgba(255,255,255,0.9)', fontSize: 14 },
+  
   main: { maxWidth: 980, margin: '20px auto', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 18 },
   uploadBox: { background: '#000', borderRadius: 12, border: '4px dashed rgba(255,255,255,0.06)', minHeight: 360, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 28 },
   uploadInner: { textAlign: 'center' },
@@ -492,13 +670,17 @@ const styles = {
   uploadTitle: { color: '#ffd200', fontSize: 32, fontWeight: 800, marginBottom: 4 },
   uploadSubtitle: { color: 'rgba(255,255,255,0.6)', fontSize: 16, fontWeight: 500, marginBottom: 14 },
   chooseButton: { background: '#ffd200', color: '#080808', padding: '14px 30px', borderRadius: 30, border: 'none', fontWeight: 700, fontSize: 16, cursor: 'pointer' },
-  uploadedNote: { color: 'rgba(255,255,255,0.85)', marginTop: 8 },
+  uploadedNote: { color: '#4caf50', marginTop: 8 },
   errorNote: { color: '#ff6b6b', marginTop: 8 },
+  
+  jobsCard: { background: '#111214', padding: 12, borderRadius: 8, border: '1px solid rgba(255,255,255,0.03)' },
+  
   tabCard: { background: '#111214', borderRadius: 12, padding: 18, boxShadow: '0 10px 30px rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.03)' },
   tabNav: { display: 'flex', gap: 18, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 10, alignItems: 'center', overflowX: 'auto' },
   tabHeader: { paddingBottom: 12, cursor: 'pointer', color: 'rgba(255,255,255,0.75)', fontWeight: 600, position: 'relative', whiteSpace: 'nowrap' },
   tabHeaderActive: { color: '#ffd200' },
   activeUnderline: { height: 3, background: '#ffd200', width: '100%', marginTop: 8, borderRadius: 3 },
+  resetButton: { padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: 12, fontWeight: 600 },
   tabContent: { paddingTop: 14 },
   sectionTitle: { margin: 0, fontSize: 20, color: '#ffd200', fontWeight: 800, marginBottom: 6 },
   helperText: { color: 'rgba(255,255,255,0.6)', marginBottom: 12 },
