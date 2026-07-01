@@ -9,14 +9,18 @@ import {
 import './styles.css';
 
 /**
- * AI ZipZop Studio - Real-time Caption Overlay Video Editor
+ * AI ZipZop Studio - Dual-Layer Viral Subtitle Editor
  * Features:
- * - Real-time word-by-word caption overlay synchronized with video playback
+ * - Dynamic Google Fonts (Rubik One + Inter)
+ * - Center Viral Caption Layer (massive, neon color wheel)
+ * - Bottom Context Bar Layer (rolling sentence context)
+ * - Simplified Start Time + Duration Caption System
+ * - Real-time word-by-word synchronized playback
  * - AI ZipZop Co-Pilot with 5 gaming profiles
- * - Dynamic animations (pop-bounce, shake, spin)
+ * - Dynamic animations (snappy pop, shake, spin)
  * - AI Asset Library: Trigger cutout images on keyword matches (CapCut-style)
  * - Full localStorage persistence
- * - Professional dark-mode UI
+ * - Professional dark-mode cyberpunk aesthetic
  */
 
 const AI_ZIPZOP_MODES = [
@@ -25,10 +29,15 @@ const AI_ZIPZOP_MODES = [
     title: '👑 Esports Montage',
     description: 'Fast cuts, heavy contrast, neon captions',
     color: '#ffd200',
-    animation: 'zipzopPopBounce',
-    fontSize: 56,
-    textStroke: 3,
-    sampleCaptions: '0|1|OMG|1|2|KILL|2|3|STREAK|3|4|🔥'
+    animation: 'zipzopSnappyPop',
+    fontSize: 68,
+    textStroke: 4,
+    sampleCaptions: [
+      { id: 1, word: 'OMG', start: 0, duration: 1 },
+      { id: 2, word: 'KILL', start: 1, duration: 1 },
+      { id: 3, word: 'STREAK', start: 2, duration: 1 },
+      { id: 4, word: '🔥', start: 3, duration: 1 }
+    ]
   },
   {
     id: 'funny_moments',
@@ -36,9 +45,14 @@ const AI_ZIPZOP_MODES = [
     description: 'Shake animations, bright colors',
     color: '#00ffcc',
     animation: 'zipzopShake',
-    fontSize: 48,
-    textStroke: 2,
-    sampleCaptions: '0|1|WAIT|1|2|WHAT|2|3|😂|3|4|LMAO'
+    fontSize: 68,
+    textStroke: 3,
+    sampleCaptions: [
+      { id: 1, word: 'WAIT', start: 0, duration: 1 },
+      { id: 2, word: 'WHAT', start: 1, duration: 1 },
+      { id: 3, word: '😂', start: 2, duration: 1 },
+      { id: 4, word: 'LMAO', start: 3, duration: 1 }
+    ]
   },
   {
     id: 'cinematic_story',
@@ -46,62 +60,83 @@ const AI_ZIPZOP_MODES = [
     description: 'Minimal, elegant, fade effect',
     color: '#ffffff',
     animation: 'zipzopFade',
-    fontSize: 40,
-    textStroke: 1,
-    sampleCaptions: '0|2|Cinematic|2|4|Storytelling|4|6|✨'
+    fontSize: 60,
+    textStroke: 2,
+    sampleCaptions: [
+      { id: 1, word: 'Cinematic', start: 0, duration: 2 },
+      { id: 2, word: 'Storytelling', start: 2, duration: 2 },
+      { id: 3, word: '✨', start: 4, duration: 2 }
+    ]
   },
   {
     id: 'clutch_fail',
     title: '🤫 Clutch or Fail',
     description: 'Aggressive, fast text',
     color: '#ff6b6b',
-    animation: 'zipzopPopBounce',
-    fontSize: 52,
-    textStroke: 3,
-    sampleCaptions: '0|0.5|CLUTCH|0.5|1|OR|1|1.5|FAIL|1.5|2|❌'
+    animation: 'zipzopSnappyPop',
+    fontSize: 68,
+    textStroke: 4,
+    sampleCaptions: [
+      { id: 1, word: 'CLUTCH', start: 0, duration: 0.5 },
+      { id: 2, word: 'OR', start: 0.5, duration: 0.5 },
+      { id: 3, word: 'FAIL', start: 1, duration: 0.5 },
+      { id: 4, word: '❌', start: 1.5, duration: 0.5 }
+    ]
   },
   {
     id: 'viral_retention',
     title: '📈 Viral Retention',
     description: 'Flashing, colorful, eye-catching',
     color: '#00ff9d',
-    animation: 'zipzopFlash',
-    fontSize: 54,
-    textStroke: 2,
-    sampleCaptions: '0|1|WATCH|1|2|THIS|2|3|NOW|3|4|⚡'
+    animation: 'zipzopSnappyPop',
+    fontSize: 68,
+    textStroke: 3,
+    sampleCaptions: [
+      { id: 1, word: 'WATCH', start: 0, duration: 1 },
+      { id: 2, word: 'THIS', start: 1, duration: 1 },
+      { id: 3, word: 'NOW', start: 2, duration: 1 },
+      { id: 4, word: '⚡', start: 3, duration: 1 }
+    ]
   }
 ];
+
+const VIRAL_NEON_COLORS = ['#ffd200', '#00ff9d', '#ff1493', '#00e5ff'];
 
 const STORAGE_KEYS = {
   TOKEN: 'zipzop_token',
   USERNAME: 'zipzop_username',
   UPLOADED_FILENAME: 'zipzop_uploaded_filename',
   SELECTED_AI_MODE: 'zipzop_selected_ai_mode',
-  CAPTION_TEXT: 'zipzop_caption_text',
+  CAPTION_LINES: 'zipzop_caption_lines',
   COLOR_PRESET: 'zipzop_color_preset',
   AI_ASSET_LIBRARY: 'zipzop_ai_asset_library'
 };
 
 export default function App() {
-  // Load fonts
+  // ========== DYNAMIC GOOGLE FONTS ==========
   useEffect(() => {
-    const id = 'zipzop-inter-font';
-    if (!document.getElementById(id)) {
+    const fontId = 'zipzop-google-fonts';
+    if (!document.getElementById(fontId)) {
       const link = document.createElement('link');
-      link.id = id;
+      link.id = fontId;
       link.rel = 'stylesheet';
-      link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap';
+      link.href = 'https://fonts.googleapis.com/css2?family=Rubik+One&family=Inter:wght@300;400;600;800&display=swap';
       document.head.appendChild(link);
     }
   }, []);
 
-  // Inject animations (including new asset pop animation)
+  // Inject animations
   useEffect(() => {
     const styleId = 'zipzop-animations';
     if (!document.getElementById(styleId)) {
       const style = document.createElement('style');
       style.id = styleId;
       style.textContent = `
+        @keyframes zipzopSnappyPop {
+          0% { transform: scale(0.5) translateY(20px); opacity: 0; }
+          60% { transform: scale(1.2); }
+          100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
         @keyframes zipzopPopBounce {
           0% { transform: scale(0.8) translateY(10px); opacity: 0; }
           50% { transform: scale(1.15); }
@@ -157,7 +192,7 @@ export default function App() {
   const videoRef = useRef(null);
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState(null);
   const [uploadedFilename, setUploadedFilename] = useState(null);
-  const [uploadStatus, setUploadStatus] = useState('idle'); // idle | uploading | uploaded | error
+  const [uploadStatus, setUploadStatus] = useState('idle');
 
   // Toast state
   const [toast, setToast] = useState(null);
@@ -166,30 +201,39 @@ export default function App() {
   const [selectedAiMode, setSelectedAiMode] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
 
+  // Caption Lines with Start + Duration
+  const [captionLines, setCaptionLines] = useState([
+    { id: 1, word: 'OMG', start: 0, duration: 1 },
+    { id: 2, word: 'THIS', start: 1, duration: 1 },
+    { id: 3, word: 'IS', start: 2, duration: 1 },
+    { id: 4, word: 'AMAZING', start: 3, duration: 1 }
+  ]);
+
   // Caption overlay state
-  const [captionLines, setCaptionLines] = useState([]);
   const [currentVideoTime, setCurrentVideoTime] = useState(0);
   const [activeCaption, setActiveCaption] = useState(null);
+  const [activeCaptionIndex, setActiveCaptionIndex] = useState(-1);
   const [captionStyle, setCaptionStyle] = useState(null);
 
   // Manual editor state
-  const [captionText, setCaptionText] = useState('0|1|OMG|1|2|THIS|2|3|IS|3|4|AMAZING');
   const [colorPreset, setColorPreset] = useState('#ffd200');
   const [currentTab, setCurrentTab] = useState('ai-copilot');
+  const [captionTextInput, setCaptionTextInput] = useState('');
+  const [transcriptInput, setTranscriptInput] = useState('');
 
-  // ========== NEW: AI ASSET LIBRARY STATE ==========
+  // AI Asset Library state
   const [aiAssetLibrary, setAiAssetLibrary] = useState([]);
-  const [assetLibraryTab, setAssetLibraryTab] = useState('library'); // 'library' | 'add'
+  const [assetLibraryTab, setAssetLibraryTab] = useState('library');
   const [assetUploadInput, setAssetUploadInput] = useState('');
   const [assetKeywordInput, setAssetKeywordInput] = useState('');
   const assetFileInputRef = useRef(null);
 
-  // Rehydrate from localStorage (including AI assets)
+  // Rehydrate from localStorage
   useEffect(() => {
     const savedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
     const savedUsername = localStorage.getItem(STORAGE_KEYS.USERNAME);
     const savedAiMode = localStorage.getItem(STORAGE_KEYS.SELECTED_AI_MODE);
-    const savedCaption = localStorage.getItem(STORAGE_KEYS.CAPTION_TEXT);
+    const savedCaptions = localStorage.getItem(STORAGE_KEYS.CAPTION_LINES);
     const savedColor = localStorage.getItem(STORAGE_KEYS.COLOR_PRESET);
     const savedAssets = localStorage.getItem(STORAGE_KEYS.AI_ASSET_LIBRARY);
 
@@ -198,7 +242,13 @@ export default function App() {
       setUsername(savedUsername);
     }
     if (savedAiMode) setSelectedAiMode(savedAiMode);
-    if (savedCaption) setCaptionText(savedCaption);
+    if (savedCaptions) {
+      try {
+        setCaptionLines(JSON.parse(savedCaptions));
+      } catch (e) {
+        console.error('Failed to parse saved captions:', e);
+      }
+    }
     if (savedColor) setColorPreset(savedColor);
     if (savedAssets) {
       try {
@@ -209,55 +259,69 @@ export default function App() {
     }
   }, []);
 
-  // Persist to localStorage (including AI assets)
+  // Persist captions to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.CAPTION_LINES, JSON.stringify(captionLines));
+  }, [captionLines]);
+
+  // Persist AI mode to localStorage
   useEffect(() => {
     if (selectedAiMode) localStorage.setItem(STORAGE_KEYS.SELECTED_AI_MODE, selectedAiMode);
   }, [selectedAiMode]);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CAPTION_TEXT, captionText);
-  }, [captionText]);
-
+  // Persist color preset to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.COLOR_PRESET, colorPreset);
   }, [colorPreset]);
 
+  // Persist AI assets to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.AI_ASSET_LIBRARY, JSON.stringify(aiAssetLibrary));
   }, [aiAssetLibrary]);
 
-  // Parse caption lines from text format
+  // Parse captions from "start | duration | word" format
   function parseCaptions(text) {
-    if (!text) return [];
-    const parts = text.split('|');
+    if (!text.trim()) return [];
+    const lines = text.split('\n').filter((line) => line.trim());
     const captions = [];
-    for (let i = 0; i < parts.length; i += 3) {
-      captions.push({
-        start: parseFloat(parts[i]) || 0,
-        end: parseFloat(parts[i + 1]) || 0,
-        word: parts[i + 2] || ''
-      });
-    }
+
+    lines.forEach((line, idx) => {
+      const parts = line.split('|').map((p) => p.trim());
+      if (parts.length >= 3) {
+        const start = parseFloat(parts[0]);
+        const duration = parseFloat(parts[1]);
+        const word = parts.slice(2).join('|');
+
+        if (!isNaN(start) && !isNaN(duration) && word) {
+          captions.push({
+            id: Date.now() + idx,
+            word: word,
+            start: start,
+            duration: duration
+          });
+        }
+      }
+    });
+
     return captions;
   }
 
-  // Update captions when caption text changes
-  useEffect(() => {
-    const parsed = parseCaptions(captionText);
-    setCaptionLines(parsed);
-  }, [captionText]);
-
-  // Video time update listener
+  // Video time update handler
   function handleVideoTimeUpdate(e) {
     const time = e.target.currentTime;
     setCurrentVideoTime(time);
 
-    // Find active caption
-    const active = captionLines.find((cap) => time >= cap.start && time < cap.end);
+    const active = captionLines.find(
+      (cap) => time >= cap.start && time <= cap.start + cap.duration
+    );
+
     if (active) {
+      const idx = captionLines.findIndex((cap) => cap.id === active.id);
       setActiveCaption(active);
+      setActiveCaptionIndex(idx);
     } else {
       setActiveCaption(null);
+      setActiveCaptionIndex(-1);
     }
   }
 
@@ -267,7 +331,7 @@ export default function App() {
     setTimeout(() => setToast(null), 3000);
   }
 
-  // Auth handlers
+  // Auth handlers - using real apiRegister from imports
   async function handleRegister() {
     const u = prompt('username?') || `user${Math.floor(Math.random() * 1000)}`;
     const p = prompt('password?') || 'pass';
@@ -283,6 +347,7 @@ export default function App() {
     }
   }
 
+  // Login handler - using real apiLogin from imports
   async function handleLogin() {
     const u = prompt('username?') || 'user';
     const p = prompt('password?') || 'pass';
@@ -302,6 +367,7 @@ export default function App() {
     }
   }
 
+  // Logout handler
   function handleLogout() {
     setToken('');
     setUsername(null);
@@ -310,11 +376,12 @@ export default function App() {
     showToast('info', 'Logged out');
   }
 
-  // File upload
+  // File upload handlers
   function handleChooseClick() {
     if (fileInputRef.current) fileInputRef.current.click();
   }
 
+  // File selected handler - using real apiUpload from imports
   async function handleFileSelected(e) {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
@@ -351,9 +418,8 @@ export default function App() {
     setSelectedAiMode(modeId);
     setAiLoading(true);
 
-    // Simulate AI configuration
     setTimeout(() => {
-      setCaptionText(mode.sampleCaptions);
+      setCaptionLines(mode.sampleCaptions);
       setColorPreset(mode.color);
       setCaptionStyle({
         color: mode.color,
@@ -366,20 +432,100 @@ export default function App() {
     }, 2000);
   }
 
+  // Reset handler
   function handleReset() {
     if (window.confirm('Reset all captions and settings?')) {
-      setCaptionText('0|1|OMG|1|2|THIS|2|3|IS|3|4|AMAZING');
+      setCaptionLines([
+        { id: 1, word: 'OMG', start: 0, duration: 1 },
+        { id: 2, word: 'THIS', start: 1, duration: 1 },
+        { id: 3, word: 'IS', start: 2, duration: 1 },
+        { id: 4, word: 'AMAZING', start: 3, duration: 1 }
+      ]);
       setColorPreset('#ffd200');
       setSelectedAiMode(null);
       setCaptionStyle(null);
       setCurrentVideoTime(0);
       setActiveCaption(null);
+      setActiveCaptionIndex(-1);
       if (videoRef.current) videoRef.current.currentTime = 0;
       showToast('info', 'Reset');
     }
   }
 
-  // ========== NEW: AI ASSET LIBRARY HANDLERS ==========
+  // Manual caption editing
+  function handleAutoSyncCaptions() {
+    if (!transcriptInput.trim()) {
+      showToast('error', 'Enter transcript first');
+      return;
+    }
+
+    const words = transcriptInput.trim().split(/\s+/);
+    const durationPerWord = 0.5;
+
+    const newCaptions = words.map((word, idx) => ({
+      id: Date.now() + idx,
+      word: word,
+      start: idx * durationPerWord,
+      duration: durationPerWord
+    }));
+
+    setCaptionLines(newCaptions);
+    setTranscriptInput('');
+    showToast('success', `Auto-synced ${words.length} words. Adjust timings in the textarea.`);
+  }
+
+  function handleApplyCaptionText() {
+    const parsed = parseCaptions(captionTextInput);
+    if (parsed.length === 0) {
+      showToast('error', 'No valid captions found. Use format: start | duration | word');
+      return;
+    }
+
+    setCaptionLines(parsed);
+    showToast('success', `Loaded ${parsed.length} captions`);
+  }
+
+  function handleUpdateCaption(captionId, field, value) {
+    setCaptionLines(
+      captionLines.map((cap) =>
+        cap.id === captionId
+          ? {
+              ...cap,
+              [field]: field === 'word' ? value : parseFloat(value) || 0
+            }
+          : cap
+      )
+    );
+  }
+
+  function handleDeleteCaption(captionId) {
+    setCaptionLines(captionLines.filter((cap) => cap.id !== captionId));
+    showToast('info', 'Caption removed');
+  }
+
+  function handleAddCaptionRow() {
+    const newId = Date.now();
+    const lastCaption = captionLines[captionLines.length - 1];
+    const nextStart = lastCaption ? lastCaption.start + lastCaption.duration : 0;
+
+    setCaptionLines([
+      ...captionLines,
+      {
+        id: newId,
+        word: 'New Word',
+        start: nextStart,
+        duration: 0.5
+      }
+    ]);
+  }
+
+  function handleCaptionRowClick(caption) {
+    if (videoRef.current) {
+      videoRef.current.currentTime = caption.start;
+    }
+  }
+
+  // AI Asset Library Handlers
   function handleAssetFileClick() {
     if (assetFileInputRef.current) assetFileInputRef.current.click();
   }
@@ -428,7 +574,7 @@ export default function App() {
     );
   }
 
-  // ========== NEW: FIND MATCHING ASSET FOR ACTIVE CAPTION ==========
+  // Find matching asset for active caption
   function getMatchingAsset() {
     if (!activeCaption) return null;
 
@@ -438,6 +584,23 @@ export default function App() {
     );
 
     return matchedAsset || null;
+  }
+
+  // Get rolling window of 5 words around active caption
+  function getContextWindow() {
+    if (activeCaptionIndex === -1) return [];
+
+    const windowSize = 5;
+    const startIdx = Math.max(0, activeCaptionIndex - Math.floor(windowSize / 2));
+    const endIdx = Math.min(captionLines.length, startIdx + windowSize);
+
+    return captionLines.slice(startIdx, endIdx);
+  }
+
+  // Get viral neon color based on caption index
+  function getViralColor(idx) {
+    if (idx === -1) return '#ffd200';
+    return VIRAL_NEON_COLORS[idx % VIRAL_NEON_COLORS.length];
   }
 
   // Render
@@ -460,13 +623,19 @@ export default function App() {
           <div style={{ flex: 1 }} />
           {!username ? (
             <div style={styles.authRow}>
-              <button style={styles.ghostBtn} onClick={handleRegister}>Register</button>
-              <button style={styles.primaryBtn} onClick={handleLogin}>Login</button>
+              <button style={styles.ghostBtn} onClick={handleRegister}>
+                Register
+              </button>
+              <button style={styles.primaryBtn} onClick={handleLogin}>
+                Login
+              </button>
             </div>
           ) : (
             <div style={styles.authRow}>
               <span style={styles.welcome}>Welcome, {username}</span>
-              <button style={styles.ghostBtn} onClick={handleLogout}>Logout</button>
+              <button style={styles.ghostBtn} onClick={handleLogout}>
+                Logout
+              </button>
             </div>
           )}
         </div>
@@ -509,7 +678,7 @@ export default function App() {
                 onTimeUpdate={handleVideoTimeUpdate}
               />
 
-              {/* ========== NEW: AI ASSET OVERLAY CONTAINER ========== */}
+              {/* AI Asset Overlay */}
               {getMatchingAsset() && (
                 <div style={styles.assetOverlayContainer}>
                   <img
@@ -524,32 +693,50 @@ export default function App() {
                 </div>
               )}
 
-              {/* Caption Overlay */}
+              {/* CENTER LAYER: Massive Viral Pop-up Word */}
               {activeCaption && (
                 <div
-                  key={`${activeCaption.start}-${activeCaption.word}`}
+                  key={`center-${activeCaption.start}-${activeCaption.word}-${activeCaption.id}`}
                   style={{
-                    ...styles.captionOverlay,
-                    color: captionStyle?.color || colorPreset,
-                    fontSize: `${captionStyle?.fontSize || 56}px`,
-                    animation: `${captionStyle?.animation || 'zipzopPopBounce'} 0.4s ease-out`
+                    ...styles.centerCaptionLayer,
+                    color: getViralColor(activeCaptionIndex),
+                    fontSize: `${captionStyle?.fontSize || 68}px`,
+                    animation: `${captionStyle?.animation || 'zipzopSnappyPop'} 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)`
                   }}
                 >
                   <div
                     style={{
-                      textShadow: `
-                        -${captionStyle?.textStroke || 2}px -${captionStyle?.textStroke || 2}px 0 #000,
-                        ${captionStyle?.textStroke || 2}px -${captionStyle?.textStroke || 2}px 0 #000,
-                        -${captionStyle?.textStroke || 2}px ${captionStyle?.textStroke || 2}px 0 #000,
-                        ${captionStyle?.textStroke || 2}px ${captionStyle?.textStroke || 2}px 0 #000,
-                        0 0 20px rgba(0,0,0,0.8)
-                      `,
+                      fontFamily: "'Rubik One', sans-serif",
                       fontWeight: 900,
-                      letterSpacing: 2,
-                      textTransform: 'uppercase'
+                      letterSpacing: 3,
+                      textTransform: 'uppercase',
+                      textShadow: `-4px -4px 0 #000, 4px -4px 0 #000, -4px 4px 0 #000, 4px 4px 0 #000, 0 0 30px rgba(0,0,0,0.9)`,
+                      filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.3))'
                     }}
                   >
                     {activeCaption.word}
+                  </div>
+                </div>
+              )}
+
+              {/* BOTTOM LAYER: Context Bar with rolling sentence */}
+              {activeCaption && (
+                <div style={styles.bottomContextLayer}>
+                  <div style={styles.contextBarContainer}>
+                    {getContextWindow().map((caption, idx) => {
+                      const isActive = caption.id === activeCaption.id;
+                      return (
+                        <div
+                          key={`context-${caption.id}`}
+                          style={{
+                            ...styles.contextWord,
+                            ...(isActive ? styles.contextWordActive : {})
+                          }}
+                        >
+                          {caption.word}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -585,7 +772,7 @@ export default function App() {
               }}
               onClick={() => setCurrentTab('manual')}
             >
-              ✨ Manual
+              ⏱️ Simple Timing
             </button>
             <button
               style={{
@@ -597,7 +784,9 @@ export default function App() {
               🎯 AI Assets
             </button>
             <div style={{ flex: 1 }} />
-            <button style={styles.resetBtn} onClick={handleReset}>Reset</button>
+            <button style={styles.resetBtn} onClick={handleReset}>
+              Reset
+            </button>
           </div>
 
           {/* Tab Content */}
@@ -625,7 +814,9 @@ export default function App() {
                           {mode.title}
                         </div>
                         <div style={styles.modeCardDesc}>{mode.description}</div>
-                        {isSelected && <div style={{ ...styles.modeCheckmark, color: mode.color }}>✓</div>}
+                        {isSelected && (
+                          <div style={{ ...styles.modeCheckmark, color: mode.color }}>✓</div>
+                        )}
                       </div>
                     );
                   })}
@@ -634,17 +825,49 @@ export default function App() {
             ) : currentTab === 'manual' ? (
               // Manual Editor
               <div>
-                <h3 style={styles.sectionTitle}>Manual Caption Editor</h3>
-                <div style={styles.field}>
-                  <label style={styles.label}>Captions (format: start|end|word)</label>
-                  <textarea
-                    style={styles.textarea}
-                    value={captionText}
-                    onChange={(e) => setCaptionText(e.target.value)}
-                    rows={4}
-                  />
+                <h3 style={styles.sectionTitle}>⏱️ Simple Caption Timing Editor</h3>
+
+                {/* Auto-Sync Section */}
+                <div style={styles.autoSyncSection}>
+                  <div style={styles.field}>
+                    <label style={styles.label}>Paste Full Transcript (for auto-sync)</label>
+                    <textarea
+                      style={styles.textarea}
+                      placeholder="Paste your entire speech here..."
+                      value={transcriptInput}
+                      onChange={(e) => setTranscriptInput(e.target.value)}
+                      rows={2}
+                    />
+                  </div>
+                  <button style={styles.syncBtn} onClick={handleAutoSyncCaptions}>
+                    🔄 Auto-Sync Captions
+                  </button>
                 </div>
 
+                {/* Manual Text Input Section */}
+                <div style={styles.manualInputSection}>
+                  <div style={styles.field}>
+                    <label style={styles.label}>Or Enter Captions Manually</label>
+                    <div style={styles.formatGuide}>
+                      Format: <code>start | duration | word</code>
+                    </div>
+                    <div style={styles.formatExample}>
+                      Example: <code>1.2 | 3 | HELLO</code> (Starts at 1.2s and stays for 3 seconds)
+                    </div>
+                    <textarea
+                      style={styles.textarea}
+                      placeholder={`0 | 1 | OMG\n1 | 2 | THIS\n3 | 1.5 | IS\n4.5 | 2 | AMAZING`}
+                      value={captionTextInput}
+                      onChange={(e) => setCaptionTextInput(e.target.value)}
+                      rows={5}
+                    />
+                  </div>
+                  <button style={styles.applyBtn} onClick={handleApplyCaptionText}>
+                    ✅ Apply Captions
+                  </button>
+                </div>
+
+                {/* Color Preset */}
                 <div style={styles.field}>
                   <label style={styles.label}>Text Color</label>
                   <div style={styles.colorInputRow}>
@@ -663,24 +886,93 @@ export default function App() {
                   </div>
                 </div>
 
-                <div style={styles.previewBox}>
-                  <div style={styles.previewLabel}>Live Preview</div>
-                  <div
-                    style={{
-                      fontSize: 32,
-                      fontWeight: 900,
-                      color: colorPreset,
-                      textShadow: `-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000`,
-                      textTransform: 'uppercase',
-                      letterSpacing: 2
-                    }}
-                  >
-                    {captionLines[0]?.word || 'Preview'}
+                {/* Caption Timeline Table */}
+                <div style={styles.timelineTableContainer}>
+                  <div style={styles.timelineTableHeader}>
+                    <div style={{ ...styles.timelineCell, flex: 2 }}>Word</div>
+                    <div style={{ ...styles.timelineCell, flex: 1 }}>Start (s)</div>
+                    <div style={{ ...styles.timelineCell, flex: 1 }}>Duration (s)</div>
+                    <div style={{ ...styles.timelineCell, flex: 0.8 }}>Action</div>
+                  </div>
+
+                  <div style={styles.timelineTableBody}>
+                    {captionLines.map((caption, idx) => (
+                      <div
+                        key={caption.id}
+                        onClick={() => handleCaptionRowClick(caption)}
+                        style={{
+                          ...styles.timelineRow,
+                          ...(activeCaption?.id === caption.id ? styles.timelineRowActive : {})
+                        }}
+                      >
+                        <input
+                          type="text"
+                          value={caption.word}
+                          onChange={(e) =>
+                            handleUpdateCaption(caption.id, 'word', e.target.value)
+                          }
+                          style={{ ...styles.timelineCell, flex: 2 }}
+                          placeholder="Word"
+                        />
+                        <input
+                          type="number"
+                          value={caption.start.toFixed(2)}
+                          onChange={(e) =>
+                            handleUpdateCaption(caption.id, 'start', e.target.value)
+                          }
+                          step="0.1"
+                          style={{ ...styles.timelineCell, flex: 1 }}
+                        />
+                        <input
+                          type="number"
+                          value={caption.duration.toFixed(2)}
+                          onChange={(e) =>
+                            handleUpdateCaption(caption.id, 'duration', e.target.value)
+                          }
+                          step="0.1"
+                          style={{ ...styles.timelineCell, flex: 1 }}
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteCaption(caption.id);
+                          }}
+                          style={styles.deleteBtn}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Add Row & Preview */}
+                <div style={styles.editorActions}>
+                  <button style={styles.addRowBtn} onClick={handleAddCaptionRow}>
+                    ➕ Add Caption Row
+                  </button>
+
+                  <div style={styles.previewBox}>
+                    <div style={styles.previewLabel}>Live Preview</div>
+                    <div
+                      style={{
+                        fontFamily: "'Rubik One', sans-serif",
+                        fontSize: 32,
+                        fontWeight: 900,
+                        color: getViralColor(activeCaptionIndex),
+                        textShadow: `-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000`,
+                        textTransform: 'uppercase',
+                        letterSpacing: 2,
+                        minHeight: 40
+                      }}
+                    >
+                      {activeCaption?.word || captionLines[0]?.word || 'Preview'}
+                    </div>
                   </div>
                 </div>
               </div>
             ) : (
-              // ========== NEW: AI ASSETS TAB ==========
+              // AI Assets Tab
               <div>
                 <div style={styles.assetTabSelector}>
                   <button
@@ -704,12 +996,13 @@ export default function App() {
                 </div>
 
                 {assetLibraryTab === 'library' ? (
-                  // Asset Library View
                   <div style={styles.assetLibraryContainer}>
                     {aiAssetLibrary.length === 0 ? (
                       <div style={styles.emptyState}>
                         <div style={styles.emptyStateText}>No assets yet</div>
-                        <div style={styles.emptyStateSubtext}>Add a cutout image to get started</div>
+                        <div style={styles.emptyStateSubtext}>
+                          Add a cutout image to get started
+                        </div>
                       </div>
                     ) : (
                       aiAssetLibrary.map((asset) => (
@@ -744,10 +1037,11 @@ export default function App() {
                     )}
                   </div>
                 ) : (
-                  // Add Asset View
                   <div>
                     <div style={styles.field}>
-                      <label style={styles.label}>Select Image (PNG with transparent background)</label>
+                      <label style={styles.label}>
+                        Select Image (PNG with transparent background)
+                      </label>
                       <button style={styles.chooseBtn} onClick={handleAssetFileClick}>
                         📸 Choose Image
                       </button>
@@ -766,7 +1060,11 @@ export default function App() {
                         <img
                           src={assetUploadInput}
                           alt="preview"
-                          style={{ maxWidth: '100%', maxHeight: 150, objectFit: 'contain' }}
+                          style={{
+                            maxWidth: '100%',
+                            maxHeight: 150,
+                            objectFit: 'contain'
+                          }}
                         />
                       </div>
                     )}
@@ -799,7 +1097,14 @@ export default function App() {
             <span>⏱️ {currentVideoTime.toFixed(2)}s</span>
             <span>📝 {captionLines.length} captions</span>
             {selectedAiMode && (
-              <span>🤖 Mode: {AI_ZIPZOP_MODES.find((m) => m.id === selectedAiMode)?.title}</span>
+              <span>
+                🤖 Mode: {AI_ZIPZOP_MODES.find((m) => m.id === selectedAiMode)?.title}
+              </span>
+            )}
+            {activeCaption && (
+              <span>
+                ▶️ Playing: <strong>{activeCaption.word}</strong> ({activeCaption.start.toFixed(2)}s)
+              </span>
             )}
           </div>
         </div>
@@ -821,7 +1126,6 @@ const styles = {
     overflow: 'hidden'
   },
 
-  // Toast
   toast: {
     position: 'fixed',
     top: 20,
@@ -837,7 +1141,6 @@ const styles = {
   toast_error: { background: '#ff6b6b', color: '#fff' },
   toast_info: { background: '#2196f3', color: '#fff' },
 
-  // Header
   header: {
     borderBottom: '1px solid rgba(255,255,255,0.04)',
     padding: '12px 20px',
@@ -855,10 +1158,8 @@ const styles = {
   authRow: { display: 'flex', gap: 10, alignItems: 'center' },
   welcome: { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
 
-  // Main Layout
   mainLayout: { display: 'flex', flex: 1, overflow: 'hidden', gap: 0 },
 
-  // Video Section (Top)
   videoSection: {
     flex: 0.5,
     display: 'flex',
@@ -869,7 +1170,13 @@ const styles = {
     overflow: 'hidden'
   },
 
-  uploadBox: { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  uploadBox: {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
   uploadInner: { textAlign: 'center' },
   uploadingText: { color: '#ffd200', fontWeight: 700, fontSize: 18 },
   uploadTitle: { fontSize: 32, fontWeight: 800, color: '#ffd200', marginBottom: 4 },
@@ -885,10 +1192,14 @@ const styles = {
     cursor: 'pointer'
   },
 
-  videoPlayerWrapper: { position: 'relative', width: '100%', height: '100%', overflow: 'hidden' },
+  videoPlayerWrapper: {
+    position: 'relative',
+    width: '100%',
+    height: '100%',
+    overflow: 'hidden'
+  },
   videoPlayer: { width: '100%', height: '100%', objectFit: 'contain' },
 
-  // ========== NEW: AI ASSET OVERLAY STYLES ==========
   assetOverlayContainer: {
     position: 'absolute',
     top: '15%',
@@ -907,10 +1218,9 @@ const styles = {
     filter: 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6))'
   },
 
-  // Caption Overlay
-  captionOverlay: {
+  centerCaptionLayer: {
     position: 'absolute',
-    top: '50%',
+    top: '45%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
     zIndex: 50,
@@ -919,7 +1229,47 @@ const styles = {
     lineHeight: 1
   },
 
-  // AI Loading Overlay
+  bottomContextLayer: {
+    position: 'absolute',
+    bottom: '12%',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 49,
+    pointerEvents: 'none',
+    width: '90%',
+    maxWidth: 800
+  },
+  contextBarContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    padding: '10px 16px',
+    background: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 8,
+    backdropFilter: 'blur(4px)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    flexWrap: 'wrap'
+  },
+  contextWord: {
+    fontSize: 14,
+    fontFamily: "'Inter', -apple-system, sans-serif",
+    color: '#fff',
+    fontWeight: 400,
+    letterSpacing: 0.5,
+    padding: '4px 8px',
+    borderRadius: 4,
+    transition: 'all 0.2s ease'
+  },
+  contextWordActive: {
+    color: '#ffd200',
+    background: 'rgba(255, 210, 0, 0.2)',
+    fontWeight: 600,
+    padding: '6px 12px',
+    borderRadius: 6,
+    boxShadow: '0 0 12px rgba(255, 210, 0, 0.4)'
+  },
+
   aiLoadingOverlay: {
     position: 'absolute',
     top: 0,
@@ -944,7 +1294,6 @@ const styles = {
   },
   aiLoadingText: { marginTop: 12, fontSize: 14, color: '#ffd200', fontWeight: 600 },
 
-  // Control Panel (Bottom)
   controlPanel: {
     flex: 0.5,
     display: 'flex',
@@ -954,14 +1303,14 @@ const styles = {
     overflow: 'hidden'
   },
 
-  // Tab Selector
   tabSelector: {
     display: 'flex',
     gap: 8,
     padding: '10px 12px',
     borderBottom: '1px solid rgba(255,255,255,0.04)',
     alignItems: 'center',
-    flexShrink: 0
+    flexShrink: 0,
+    overflowX: 'auto'
   },
   tabBtn: {
     padding: '8px 12px',
@@ -972,7 +1321,8 @@ const styles = {
     cursor: 'pointer',
     fontSize: 12,
     fontWeight: 600,
-    transition: 'all 0.2s'
+    transition: 'all 0.2s',
+    whiteSpace: 'nowrap'
   },
   tabBtnActive: {
     background: 'rgba(255,210,0,0.1)',
@@ -990,7 +1340,6 @@ const styles = {
     fontWeight: 600
   },
 
-  // Tab Content
   tabContent: {
     flex: 1,
     overflow: 'auto',
@@ -999,7 +1348,6 @@ const styles = {
 
   sectionTitle: { margin: '0 0 12px 0', fontSize: 16, fontWeight: 800, color: '#ffd200' },
 
-  // Mode Grid
   modeGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
@@ -1017,7 +1365,131 @@ const styles = {
   modeCardDesc: { fontSize: 10, color: 'rgba(255,255,255,0.7)', lineHeight: 1.3 },
   modeCheckmark: { marginTop: 6, fontSize: 14, fontWeight: 800 },
 
-  // Manual Fields
+  autoSyncSection: {
+    marginBottom: 12,
+    padding: 12,
+    background: 'rgba(76,175,80,0.08)',
+    borderRadius: 8,
+    border: '1px solid rgba(76,175,80,0.2)'
+  },
+  manualInputSection: {
+    marginBottom: 12,
+    padding: 12,
+    background: 'rgba(255,210,0,0.08)',
+    borderRadius: 8,
+    border: '1px solid rgba(255,210,0,0.2)'
+  },
+  formatGuide: {
+    fontSize: 11,
+    color: '#ffd200',
+    fontWeight: 600,
+    marginBottom: 4,
+    padding: '6px 8px',
+    background: 'rgba(255,210,0,0.1)',
+    borderRadius: 4,
+    fontFamily: 'monospace'
+  },
+  formatExample: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 8,
+    padding: '6px 8px',
+    background: 'rgba(0,0,0,0.3)',
+    borderRadius: 4,
+    fontFamily: 'monospace',
+    borderLeft: '3px solid #ffd200'
+  },
+  syncBtn: {
+    width: '100%',
+    padding: '10px 12px',
+    borderRadius: 6,
+    border: 'none',
+    background: 'linear-gradient(90deg, #4caf50, #66bb6a)',
+    color: '#fff',
+    fontWeight: 700,
+    fontSize: 13,
+    cursor: 'pointer',
+    marginTop: 8,
+    transition: 'all 0.2s'
+  },
+  applyBtn: {
+    width: '100%',
+    padding: '10px 12px',
+    borderRadius: 6,
+    border: 'none',
+    background: 'linear-gradient(90deg, #ffd200, #ffed4e)',
+    color: '#000',
+    fontWeight: 700,
+    fontSize: 13,
+    cursor: 'pointer',
+    marginTop: 8,
+    transition: 'all 0.2s'
+  },
+
+  timelineTableContainer: {
+    marginTop: 12,
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    overflow: 'hidden',
+    background: 'rgba(0,0,0,0.3)'
+  },
+  timelineTableHeader: {
+    display: 'flex',
+    background: 'rgba(255,210,0,0.1)',
+    borderBottom: '1px solid rgba(255,255,255,0.1)',
+    padding: '8px 0',
+    fontWeight: 700,
+    fontSize: 11,
+    color: '#ffd200'
+  },
+  timelineCell: {
+    padding: '8px 10px',
+    borderRight: '1px solid rgba(255,255,255,0.05)',
+    display: 'flex',
+    alignItems: 'center'
+  },
+  timelineTableBody: {
+    maxHeight: 300,
+    overflow: 'auto'
+  },
+  timelineRow: {
+    display: 'flex',
+    borderBottom: '1px solid rgba(255,255,255,0.05)',
+    cursor: 'pointer',
+    transition: 'background 0.2s',
+    padding: '4px 0'
+  },
+  timelineRowActive: {
+    background: 'rgba(255,210,0,0.15)'
+  },
+
+  editorActions: {
+    marginTop: 12,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10
+  },
+  addRowBtn: {
+    padding: '10px 12px',
+    borderRadius: 6,
+    border: '1px solid rgba(255,255,255,0.2)',
+    background: 'rgba(76,175,80,0.1)',
+    color: '#4caf50',
+    fontWeight: 600,
+    fontSize: 12,
+    cursor: 'pointer',
+    transition: 'all 0.2s'
+  },
+  deleteBtn: {
+    padding: '6px 8px',
+    borderRadius: 4,
+    border: 'none',
+    background: 'transparent',
+    cursor: 'pointer',
+    fontSize: 12,
+    margin: '8px 6px'
+  },
+
   field: { marginBottom: 12, display: 'flex', flexDirection: 'column' },
   label: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 6, fontWeight: 600 },
   textarea: {
@@ -1060,7 +1532,6 @@ const styles = {
   },
   previewLabel: { fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 8 },
 
-  // ========== NEW: AI ASSET STYLES ==========
   assetTabSelector: {
     display: 'flex',
     gap: 8,
@@ -1170,7 +1641,6 @@ const styles = {
     fontStyle: 'italic'
   },
 
-  // Status Bar
   statusBar: {
     display: 'flex',
     gap: 12,
@@ -1178,10 +1648,10 @@ const styles = {
     borderTop: '1px solid rgba(255,255,255,0.04)',
     fontSize: 11,
     color: 'rgba(255,255,255,0.7)',
-    flexShrink: 0
+    flexShrink: 0,
+    overflowX: 'auto'
   },
 
-  // Buttons
   primaryBtn: {
     padding: '8px 12px',
     borderRadius: 6,
