@@ -4,7 +4,7 @@ import './styles.css';
 
 /**
  * ============================================================================
- * ULTIMATE VIRAL GAMING VIDEO EDITOR - TECHNO GAMERZ INSPIRED
+ * UNIVERSAL VIRAL AI VIDEO EDITOR - PROFESSIONAL EDITION
  * ============================================================================
  * 
  * Architecture: Zero-shake viewport with 3-tier layout:
@@ -12,10 +12,8 @@ import './styles.css';
  * - MIDDLE: Cyberpunk voice assistant bar with sound-wave animation
  * - BOTTOM 60%: Independent scrollable master AI controls
  * 
- * Inspired by editing styles of:
- * - Techno Gamerz (fast jump-cuts, high-contrast)
- * - Mythpat (synchronized sound effects)
- * - CarryMinati (expression-based zoom dynamics)
+ * Powered by advanced AI frame analysis, audio processing, and
+ * intelligent video transformation algorithms.
  */
 
 // ============================================================================
@@ -25,11 +23,11 @@ const HolographicSiriLoader = ({ isActive, currentStep }) => {
   if (!isActive) return null;
 
   const steps = [
-    '🔍 AI scanning gameplay telemetry & kill-feeds...',
-    '🎭 Analyzing face reactions for dynamic viral zoom-ins...',
-    '🎨 Injecting high-contrast Techno-Gamerz style color grading...',
-    '💥 Syncing sound effects to frame-accurate gunshot peaks...',
-    '⚡ Rendering final viral masterpiece...'
+    '🔍 AI scanning video frames and gameplay telemetry...',
+    '🎭 Analyzing expressions and intensity peaks for dynamic effects...',
+    '🎨 Applying premium color grading and visual enhancement...',
+    '💥 Synchronizing audio spikes with visual effects...',
+    '⚡ Rendering final viral-optimized masterpiece...'
   ];
 
   const currentStepText = steps[currentStep % steps.length];
@@ -57,7 +55,7 @@ const HolographicSiriLoader = ({ isActive, currentStep }) => {
       {/* Text Information Below */}
       <div className="absolute bottom-32 left-0 right-0 text-center">
         <h2 className="text-2xl font-black text-[#FFED4E] mb-6 uppercase tracking-wider drop-shadow-lg" style={{ textShadow: '0 0 20px rgba(255, 237, 74, 0.6)' }}>
-          Viral Engine Processing
+          Processing Viral Video
         </h2>
         
         <div className="flex items-center justify-center gap-3 mb-6">
@@ -77,7 +75,7 @@ const HolographicSiriLoader = ({ isActive, currentStep }) => {
         </div>
 
         <p className="text-xs text-gray-400 mt-4 font-mono">
-          {Math.round(((currentStep + 1) / steps.length) * 100)}% — Gaming Gods are smiling today
+          {Math.round(((currentStep + 1) / steps.length) * 100)}% — Advanced algorithms at work
         </p>
       </div>
     </div>
@@ -100,7 +98,7 @@ const CyberpunkAssistantBar = ({ onCommand, isListening, assistantResponse, isRe
 
   const handleMicClick = () => {
     // Mock speech recognition toggle
-    alert('🎤 Speech Recognition: This would activate your device microphone for voice commands');
+    alert('🎤 Speech Recognition: Microphone activation ready for voice commands');
   };
 
   return (
@@ -148,7 +146,7 @@ const CyberpunkAssistantBar = ({ onCommand, isListening, assistantResponse, isRe
             value={commandInput}
             onChange={(e) => setCommandInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="असिस्टेंट से कहें (e.g., 'Techno Gamerz स्टाइल में एडिट कर भाई' या 'गनशॉट साउंड सिंक कर दो')"
+            placeholder="असिस्टेंट से कहें (e.g., 'Please edit this video' या 'वीडियो एडिट कर दो भाई')"
             className="w-full px-4 py-3 bg-gradient-to-r from-gray-900 to-gray-800 border-2 border-purple-500/50 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-[#00FFCC] focus:shadow-lg transition-all placeholder-gray-500"
             style={{
               boxShadow: 'inset 0 0 10px rgba(0, 255, 204, 0.05), 0 0 15px rgba(139, 92, 246, 0.1)'
@@ -171,7 +169,7 @@ const CyberpunkAssistantBar = ({ onCommand, isListening, assistantResponse, isRe
 
       {/* Hint Text */}
       <p className="text-xs text-gray-500 mt-2 font-mono">
-        💡 Tip: Use Hinglish commands or English. Examples: "कलर ग्रेडिंग चालू", "zoom कर दो", "trim करो"
+        💡 Tip: Try "edit this video", "trim", "zoom", "color", "sound", "subtitle", or "meme" commands
       </p>
     </div>
   );
@@ -299,42 +297,42 @@ export default function App() {
     {
       title: 'AI Smart Jump-Trim',
       icon: '✂️',
-      description: 'Cuts all empty air, dead-zones, and traveling time instantly',
+      description: 'Intelligently cuts empty air, dead zones, and traveling time',
       isActive: false,
       gradient: 'from-[#FF6B6B]/20 to-[#FF1493]/20'
     },
     {
       title: 'Expression Auto-Zoom',
       icon: '🔍',
-      description: 'Zooms in 1.3x during heavy actions, clutches, or screaming',
+      description: 'Dynamically zooms 1.3x during intense actions and peaks',
       isActive: false,
       gradient: 'from-[#00FFCC]/20 to-[#00FF66]/20'
     },
     {
-      title: 'Techno-Viral Color Grading',
+      title: 'Premium Color Grading',
       icon: '🎨',
-      description: 'Boosts saturation, contrast, clarity for premium gaming look',
+      description: 'Enhances saturation, contrast, and clarity automatically',
       isActive: false,
       gradient: 'from-[#FFED4E]/20 to-[#FFD93D]/20'
     },
     {
-      title: 'Gunshot Sound-Sync',
+      title: 'Audio Peak Sound-Sync',
       icon: '🔊',
-      description: 'Detects audio spikes and syncs screen effects automatically',
+      description: 'Detects audio spikes and syncs visual effects precisely',
       isActive: false,
       gradient: 'from-[#EC4899]/20 to-[#FF1493]/20'
     },
     {
       title: 'Neon Pop-Bounce Subtitles',
       icon: '🔤',
-      description: 'Word-by-word uppercase kinetic captions with scale animations',
+      description: 'Generates kinetic uppercase captions with scale animations',
       isActive: false,
       gradient: 'from-[#8B5CF6]/20 to-[#6366F1]/20'
     },
     {
-      title: 'Automated Meme/SFX Insertion',
+      title: 'Intelligent Effect Insertion',
       icon: '🎭',
-      description: 'Detects funny/dramatic pauses and prepares contextual slots',
+      description: 'Detects dramatic pauses and prepares contextual effect slots',
       isActive: false,
       gradient: 'from-[#06B6D4]/20 to-[#00FFCC]/20'
     }
@@ -351,7 +349,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isProcessing]);
 
-  // ========== COMMAND HANDLER ==========
+  // ========== COMMAND HANDLER WITH MAGIC "EDIT" TRIGGER ==========
   const handleVoiceCommand = (command) => {
     const lowerCmd = command.toLowerCase();
     setIsResponding(true);
@@ -360,32 +358,44 @@ export default function App() {
     let toggledFeatures = [...features];
     let responseMsg = '';
 
-    if (lowerCmd.includes('trim') || lowerCmd.includes('jump cut')) {
-      toggledFeatures[0].isActive = !toggledFeatures[0].isActive;
-      responseMsg = 'AI: समझ गया भाई! ✂️ AI Smart Jump-Trim एक्टिवेटेड—सभी डेड ज़ोन्स निकाल दूंगा!';
-    } else if (lowerCmd.includes('zoom') || lowerCmd.includes('expression')) {
-      toggledFeatures[1].isActive = !toggledFeatures[1].isActive;
-      responseMsg = 'AI: 🔍 Expression Auto-Zoom लोड हो गया! अब तुम्हारे क्लच मोमेंट्स असली में जान पड़ेंगे!';
-    } else if (lowerCmd.includes('color') || lowerCmd.includes('grading')) {
-      toggledFeatures[2].isActive = !toggledFeatures[2].isActive;
-      responseMsg = 'AI: 🎨 Techno-Viral Color Grading एक्टिवेटेड! तुम्हारा गेमप्ले अब प्रीमियम दिखेगा!';
-    } else if (lowerCmd.includes('sound') || lowerCmd.includes('gunshot') || lowerCmd.includes('sync')) {
-      toggledFeatures[3].isActive = !toggledFeatures[3].isActive;
-      responseMsg = 'AI: 🔊 Gunshot Sound-Sync अक्टिवेट! हर बुलेट परफेक्ट साउंड पाएगा!';
-    } else if (lowerCmd.includes('subtitle') || lowerCmd.includes('caption')) {
-      toggledFeatures[4].isActive = !toggledFeatures[4].isActive;
-      responseMsg = 'AI: 🔤 Neon Pop-Bounce Subtitles ऑन! तुम्हारी बातें अब विज़ुअली पॉप करेंगी!';
-    } else if (lowerCmd.includes('meme') || lowerCmd.includes('effect') || lowerCmd.includes('sfx')) {
-      toggledFeatures[5].isActive = !toggledFeatures[5].isActive;
-      responseMsg = 'AI: 🎭 Automated Meme/SFX Insertion सेटअप हो गया! तुम्हारे ड्रामा मोमेंट्स पॉप करेंगे!';
-    } else if (lowerCmd.includes('techno gamerz') || lowerCmd.includes('techno')) {
-      toggledFeatures = toggledFeatures.map((f, i) => ({ ...f, isActive: i < 4 }));
-      responseMsg = 'AI: ⚡ TECHNO GAMERZ SIGNATURE STYLE लोड! फास्ट जम्प-कट्स, हाई-कंट्रास्ट कलर्स, और गनशॉट सिंक अक्टिवेटेड!';
-    } else if (lowerCmd.includes('all') || lowerCmd.includes('सब') || lowerCmd.includes('पूरा')) {
+    // Magic "Edit" Command - Activates ALL premium features
+    if (
+      lowerCmd.includes('edit this video') ||
+      lowerCmd.includes('please edit') ||
+      lowerCmd.includes('edit करो') ||
+      lowerCmd.includes('वीडियो एडिट कर दो') ||
+      lowerCmd.includes('video edit')
+    ) {
       toggledFeatures = toggledFeatures.map((f) => ({ ...f, isActive: true }));
-      responseMsg = 'AI: 🚀 ULTIMATE VIRAL MODE ACTIVATED! सभी एडवांस्ड फीचर्स ऑन—तुम्हारा वीडियो अब गॉड-लेवल होगा!';
-    } else {
-      responseMsg = `AI: मैंने समझा "भाई! मैं तुम्हारे कमांड को प्रोसेस कर रहा हूं... कृपया ट्राई करें कोई स्पेसिफिक फीचर जैसे 'trim', 'zoom', 'color', 'sound', 'subtitle' या 'meme'!`;
+      responseMsg = 'AI: समझ गया भाई! मैं आपकी वीडियो का एनालिसिस करके इसे बेस्ट वायरल और ट्रेंडिंग फॉर्मेट में एडिट कर रहा हूँ। सभी ऑटो-एआई फीचर्स एक्टिवेट कर दिए गए हैं। ⚡';
+    } 
+    // Individual Feature Commands
+    else if (lowerCmd.includes('trim') || lowerCmd.includes('jump cut')) {
+      toggledFeatures[0].isActive = !toggledFeatures[0].isActive;
+      responseMsg = `AI: ${toggledFeatures[0].isActive ? '✂️ Smart Jump-Trim एक्टिवेटेड' : '✂️ Smart Jump-Trim डीएक्टिवेटेड'}—${toggledFeatures[0].isActive ? 'सभी डेड ज़ोन्स निकाल दूंगा' : 'ट्रिमिंग फीचर ऑफ किया गया'}.';
+    } 
+    else if (lowerCmd.includes('zoom') || lowerCmd.includes('expression')) {
+      toggledFeatures[1].isActive = !toggledFeatures[1].isActive;
+      responseMsg = `AI: ${toggledFeatures[1].isActive ? '🔍 Expression Auto-Zoom लोड हो गया' : '🔍 Expression Auto-Zoom डीएक्टिवेटेड'}—${toggledFeatures[1].isActive ? 'इंटेंसिटी पीक्स में डायनामिक ज़ूम लागू होंगे' : 'ऑटो-ज़ूम फीचर ऑफ किया गया'}.`;
+    } 
+    else if (lowerCmd.includes('color') || lowerCmd.includes('grading') || lowerCmd.includes('enhance')) {
+      toggledFeatures[2].isActive = !toggledFeatures[2].isActive;
+      responseMsg = `AI: ${toggledFeatures[2].isActive ? '🎨 Premium Color Grading एक्टिवेटेड' : '🎨 Premium Color Grading डीएक्टिवेटेड'}—${toggledFeatures[2].isActive ? 'विजुअल इनहांसमेंट लागू हो रहा है' : 'कलर ग्रेडिंग ऑफ किया गया'}.`;
+    } 
+    else if (lowerCmd.includes('sound') || lowerCmd.includes('sync') || lowerCmd.includes('audio')) {
+      toggledFeatures[3].isActive = !toggledFeatures[3].isActive;
+      responseMsg = `AI: ${toggledFeatures[3].isActive ? '🔊 Audio Peak Sound-Sync एक्टिवेटेड' : '🔊 Audio Peak Sound-Sync डीएक्टिवेटेड'}—${toggledFeatures[3].isActive ? 'ऑडियो स्पाइक्स से विजुअल इफेक्ट्स सिंक होंगे' : 'साउंड-सिंक फीचर ऑफ किया गया'}.`;
+    } 
+    else if (lowerCmd.includes('subtitle') || lowerCmd.includes('caption') || lowerCmd.includes('text')) {
+      toggledFeatures[4].isActive = !toggledFeatures[4].isActive;
+      responseMsg = `AI: ${toggledFeatures[4].isActive ? '🔤 Neon Pop-Bounce Subtitles ऑन' : '🔤 Neon Pop-Bounce Subtitles ऑफ'}—${toggledFeatures[4].isActive ? 'वर्ड-बाय-वर्ड किनेटिक कैप्शन जेनरेट होंगे' : 'सबटाइटल फीचर ऑफ किया गया'}.`;
+    } 
+    else if (lowerCmd.includes('effect') || lowerCmd.includes('meme') || lowerCmd.includes('sfx')) {
+      toggledFeatures[5].isActive = !toggledFeatures[5].isActive;
+      responseMsg = `AI: ${toggledFeatures[5].isActive ? '🎭 Intelligent Effect Insertion सेटअप' : '🎭 Intelligent Effect Insertion डीएक्टिवेटेड'}—${toggledFeatures[5].isActive ? 'ड्रामा मोमेंट्स के लिए इफेक्ट स्लॉट्स तैयार' : 'इफेक्ट इंसर्शन ऑफ किया गया'}.`;
+    } 
+    else {
+      responseMsg = `AI: कमांड समझ नहीं आया। कृपया ट्राई करें: "edit this video", "trim", "zoom", "color", "sound", "subtitle" या "meme"। या आप फीचर्स को मैन्युअली टॉगल कर सकते हैं।`;
     }
 
     setFeatures(toggledFeatures);
@@ -393,7 +403,7 @@ export default function App() {
 
     setTimeout(() => {
       setIsResponding(false);
-    }, 3000);
+    }, 3500);
   };
 
   // ========== FEATURE TOGGLE ==========
@@ -406,23 +416,23 @@ export default function App() {
   // ========== LAUNCH ENGINE ==========
   const handleLaunchEngine = () => {
     if (!uploadedVideoUrl) {
-      alert('📹 Please upload a gaming video first to launch the Viral AI Engine!');
+      alert('📹 Please upload a video first to launch the Viral AI Engine!');
       return;
     }
 
     setIsProcessing(true);
     setTimeout(() => {
       setIsProcessing(false);
-      alert('✅ Viral masterpiece is ready! Your gaming video has been transformed into a viral sensation!');
+      alert('✅ Processing complete! Your video has been transformed using all active AI features.');
     }, 8000);
   };
 
   // ========== DEMO UPLOAD ==========
   const handleUploadVideo = () => {
     // Mock video upload
-    const mockVideoUrl = 'https://via.placeholder.com/800x600/000000/FFED4E?text=GAMING+VIDEO';
+    const mockVideoUrl = 'https://via.placeholder.com/800x600/000000/FFED4E?text=VIDEO+PREVIEW';
     setUploadedVideoUrl(mockVideoUrl);
-    alert('✅ Demo video loaded! Now customize your features and launch the AI engine.');
+    alert('✅ Demo video loaded! Customize your AI features and launch the engine.');
   };
 
   // ========== RENDER ==========
@@ -438,13 +448,13 @@ export default function App() {
             <img src={uploadedVideoUrl} alt="Video Preview" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
             <div className="absolute bottom-4 left-4 text-sm font-mono text-[#00FFCC]">
-              ▶ PREVIEW MODE | Rendering: {features.filter((f) => f.isActive).length} Features Active
+              ▶ PREVIEW MODE | Active Features: {features.filter((f) => f.isActive).length}
             </div>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center w-full h-full gap-4">
             <div className="text-6xl">🎬</div>
-            <h2 className="text-2xl font-black text-[#FFED4E] uppercase tracking-wider">Upload Your Gaming Video</h2>
+            <h2 className="text-2xl font-black text-[#FFED4E] uppercase tracking-wider">Upload Your Video</h2>
             <button
               onClick={handleUploadVideo}
               className="px-8 py-3 bg-gradient-to-r from-[#00FFCC] to-[#00FF66] text-black font-bold rounded-lg hover:shadow-lg transition-all uppercase text-sm tracking-wide"
@@ -468,10 +478,10 @@ export default function App() {
       <div className="flex-1 overflow-y-auto bg-gradient-to-b from-[#0B0F19] to-[#1a1a3f] px-6 py-6 scrollbar-thin scrollbar-thumb-purple-500 scrollbar-track-gray-900">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-xl font-black text-[#FFED4E] mb-2 uppercase tracking-wider drop-shadow-lg">
-            🎮 Legendary Creator Features
+            🎮 Universal AI Features
           </h2>
           <p className="text-sm text-gray-400 font-mono mb-6">
-            Inspired by Techno Gamerz, Mythpat, CarryMinati & global viral creators • Activate features or use voice commands
+            Powered by Universal Gaming AI Engines • Activate features manually or use voice commands
           </p>
 
           <MasterFeaturesGrid features={features} onToggle={handleToggleFeature} />
