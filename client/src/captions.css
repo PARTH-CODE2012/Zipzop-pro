@@ -1,0 +1,456 @@
+/* ============================================================================
+   VIRAL PLAYER - PRODUCTION-READY KINETIC CAPTION STYLING
+   Instagram Reels / TikTok Style Captions with Letter-by-Letter Animation
+   ============================================================================ */
+
+/* ============================================================================
+   MAIN PLAYER WRAPPER & CONTAINER
+   ============================================================================ */
+
+.viral-player-wrapper {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  font-family: 'Rubik One', 'Impact', 'Black Ops One', sans-serif;
+}
+
+.viral-video-container {
+  position: relative;
+  width: 100%;
+  padding-bottom: 177.78%; /* 9:16 aspect ratio for mobile vertical video */
+  background: #000;
+  overflow: hidden;
+}
+
+.viral-video-player {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+/* ============================================================================
+   PLAY BUTTON OVERLAY
+   ============================================================================ */
+
+.viral-play-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70px;
+  height: 70px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  backdrop-filter: blur(5px);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+}
+
+.viral-play-button:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.viral-play-icon {
+  font-size: 32px;
+  color: white;
+  margin-left: 4px;
+  font-weight: bold;
+}
+
+/* ============================================================================
+   CAPTION CONTAINER & LETTER STYLING
+   ============================================================================ */
+
+.viral-caption-container {
+  position: absolute;
+  bottom: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  text-align: center;
+  z-index: 20;
+  pointer-events: none;
+  user-select: none;
+}
+
+.viral-caption-word {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  flex-wrap: wrap;
+  line-height: 1.2;
+}
+
+.viral-caption-letter {
+  display: inline-block;
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  font-family: 'Rubik One', 'Impact', 'Black Ops One', sans-serif;
+  text-transform: uppercase;
+  
+  /* Thick black stroke for maximum contrast */
+  -webkit-text-stroke: 2px #000;
+  text-stroke: 2px #000;
+  
+  /* Multi-layer text shadow for depth */
+  text-shadow:
+    -3px -3px 0 #000,
+    3px -3px 0 #000,
+    -3px 3px 0 #000,
+    3px 3px 0 #000,
+    0 0 20px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(0, 0, 0, 0.6);
+  
+  /* Glow effect using filter */
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+  
+  /* Smooth transitions */
+  transition: all 0.2s ease;
+  
+  /* Variable for dynamic color */
+  color: var(--letter-color, #FF0055);
+  
+  /* Ensure text stays crisp */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================================
+   KINETIC POP-BOUNCE ANIMATION
+   ============================================================================ */
+
+@keyframes popBounce {
+  0% {
+    transform: scale(0.3) translateY(20px) rotate(-10deg);
+    opacity: 0;
+  }
+
+  30% {
+    transform: scale(1.3) translateY(-5px) rotate(3deg);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.15) translateY(0) rotate(-2deg);
+  }
+
+  70% {
+    transform: scale(1.05) rotate(1deg);
+  }
+
+  100% {
+    transform: scale(1) translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* ============================================================================
+   ALTERNATIVE POP ANIMATIONS (for variation)
+   ============================================================================ */
+
+@keyframes popBounceIntense {
+  0% {
+    transform: scale(0.2) translateY(30px) rotate(-15deg);
+    opacity: 0;
+  }
+
+  40% {
+    transform: scale(1.4) rotate(5deg);
+    opacity: 1;
+  }
+
+  60% {
+    transform: scale(1.1) rotate(-3deg);
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes popBounceLight {
+  0% {
+    transform: scale(0.5) translateY(10px);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ============================================================================
+   TIME DISPLAY
+   ============================================================================ */
+
+.viral-time-display {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  z-index: 15;
+  backdrop-filter: blur(5px);
+}
+
+/* ============================================================================
+   CONTROL BAR
+   ============================================================================ */
+
+.viral-control-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.8));
+  height: 60px;
+  position: relative;
+  z-index: 25;
+}
+
+.viral-play-pause-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 0, 85, 0.8);
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.viral-play-pause-btn:hover {
+  background: rgba(255, 0, 85, 1);
+  transform: scale(1.1);
+}
+
+.viral-play-pause-btn:active {
+  transform: scale(0.95);
+}
+
+/* ============================================================================
+   PROGRESS BAR & TIME CONTAINER
+   ============================================================================ */
+
+.viral-progress-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 40px;
+}
+
+.viral-progress-bar {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.3);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.viral-progress-bar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #FF0055;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.viral-progress-bar::-webkit-slider-thumb:hover {
+  width: 18px;
+  height: 18px;
+  background: #FF1A6E;
+}
+
+.viral-progress-bar::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #FF0055;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.viral-progress-bar::-moz-range-thumb:hover {
+  width: 18px;
+  height: 18px;
+  background: #FF1A6E;
+}
+
+/* ============================================================================
+   TIME INFO
+   ============================================================================ */
+
+.viral-time-info {
+  color: #fff;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  min-width: 50px;
+  text-align: right;
+}
+
+/* ============================================================================
+   FULLSCREEN BUTTON
+   ============================================================================ */
+
+.viral-fullscreen-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.viral-fullscreen-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.viral-fullscreen-btn:active {
+  transform: scale(0.95);
+}
+
+/* ============================================================================
+   DEBUG INFO (Development Only)
+   ============================================================================ */
+
+.viral-debug-info {
+  position: absolute;
+  bottom: 80px;
+  left: 12px;
+  background: rgba(0, 0, 0, 0.9);
+  color: #00FF66;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-family: 'Courier New', monospace;
+  z-index: 20;
+  line-height: 1.6;
+  border: 1px solid #00FF66;
+}
+
+.viral-debug-info p {
+  margin: 4px 0;
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+/* Tablet & Landscape */
+@media (min-width: 768px) {
+  .viral-player-wrapper {
+    max-width: 800px;
+  }
+
+  .viral-caption-letter {
+    font-size: 56px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .viral-player-wrapper {
+    max-width: 100%;
+  }
+
+  .viral-caption-letter {
+    font-size: 64px;
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .viral-caption-letter {
+    animation: none !important;
+    transform: scale(1) !important;
+    opacity: 1 !important;
+  }
+
+  .viral-play-button,
+  .viral-play-pause-btn,
+  .viral-fullscreen-btn {
+    transition: none !important;
+  }
+}
+
+/* ============================================================================
+   DARK MODE & HIGH CONTRAST
+   ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+  .viral-caption-letter {
+    text-shadow:
+      -4px -4px 0 #000,
+      4px -4px 0 #000,
+      -4px 4px 0 #000,
+      4px 4px 0 #000,
+      0 0 25px rgba(0, 0, 0, 0.9),
+      0 0 40px rgba(0, 0, 0, 0.8);
+  }
+}
+
+@media (prefers-contrast: more) {
+  .viral-caption-letter {
+    -webkit-text-stroke: 3px #000;
+    text-stroke: 3px #000;
+  }
+}
+
+/* ============================================================================
+   PRINT STYLES (if needed for export)
+   ============================================================================ */
+
+@media print {
+  .viral-control-bar,
+  .viral-play-button,
+  .viral-time-display,
+  .viral-debug-info {
+    display: none !important;
+  }
+  }
