@@ -6,19 +6,21 @@ import {
   createJob,
   createKineticCaption
 } from './api';
+import ViralPlayer from './ViralPlayer';
 import './styles.css';
 
 /**
- * AI ZipZop Studio - Dual-Layer Viral Subtitle Editor
+ * AI ZipZop Studio - Dual-Layer Viral Subtitle Editor with CapCut-Style Kinetic Captions
+ * Production-Ready SaaS Platform for Instagram Reels/TikTok Caption Generation
+ * 
  * Features:
- * - Dynamic Google Fonts (Rubik One + Inter)
- * - Center Viral Caption Layer (massive, neon color wheel)
- * - Bottom Context Bar Layer (rolling sentence context)
+ * - Integrated ViralPlayer with letter-by-letter neon animations
+ * - Custom Cyberpunk Gaming Auth Modal with animated mascot
+ * - AI ZipZop Co-Pilot with 5 gaming profiles
+ * - CapCut-style AI Asset Library (keyword trigger cutout images)
  * - Simplified Start Time + Duration Caption System
  * - Real-time word-by-word synchronized playback
- * - AI ZipZop Co-Pilot with 5 gaming profiles
  * - Dynamic animations (snappy pop, shake, spin)
- * - AI Asset Library: Trigger cutout images on keyword matches (CapCut-style)
  * - Full localStorage persistence
  * - Professional dark-mode cyberpunk aesthetic
  */
@@ -33,10 +35,10 @@ const AI_ZIPZOP_MODES = [
     fontSize: 68,
     textStroke: 4,
     sampleCaptions: [
-      { id: 1, word: 'OMG', start: 0, duration: 1 },
-      { id: 2, word: 'KILL', start: 1, duration: 1 },
-      { id: 3, word: 'STREAK', start: 2, duration: 1 },
-      { id: 4, word: '🔥', start: 3, duration: 1 }
+      { word: 'OMG', start: 0, duration: 1 },
+      { word: 'KILL', start: 1, duration: 1 },
+      { word: 'STREAK', start: 2, duration: 1 },
+      { word: '🔥', start: 3, duration: 1 }
     ]
   },
   {
@@ -48,10 +50,10 @@ const AI_ZIPZOP_MODES = [
     fontSize: 68,
     textStroke: 3,
     sampleCaptions: [
-      { id: 1, word: 'WAIT', start: 0, duration: 1 },
-      { id: 2, word: 'WHAT', start: 1, duration: 1 },
-      { id: 3, word: '😂', start: 2, duration: 1 },
-      { id: 4, word: 'LMAO', start: 3, duration: 1 }
+      { word: 'WAIT', start: 0, duration: 1 },
+      { word: 'WHAT', start: 1, duration: 1 },
+      { word: '😂', start: 2, duration: 1 },
+      { word: 'LMAO', start: 3, duration: 1 }
     ]
   },
   {
@@ -63,9 +65,9 @@ const AI_ZIPZOP_MODES = [
     fontSize: 60,
     textStroke: 2,
     sampleCaptions: [
-      { id: 1, word: 'Cinematic', start: 0, duration: 2 },
-      { id: 2, word: 'Storytelling', start: 2, duration: 2 },
-      { id: 3, word: '✨', start: 4, duration: 2 }
+      { word: 'Cinematic', start: 0, duration: 2 },
+      { word: 'Storytelling', start: 2, duration: 2 },
+      { word: '✨', start: 4, duration: 2 }
     ]
   },
   {
@@ -77,10 +79,10 @@ const AI_ZIPZOP_MODES = [
     fontSize: 68,
     textStroke: 4,
     sampleCaptions: [
-      { id: 1, word: 'CLUTCH', start: 0, duration: 0.5 },
-      { id: 2, word: 'OR', start: 0.5, duration: 0.5 },
-      { id: 3, word: 'FAIL', start: 1, duration: 0.5 },
-      { id: 4, word: '❌', start: 1.5, duration: 0.5 }
+      { word: 'CLUTCH', start: 0, duration: 0.5 },
+      { word: 'OR', start: 0.5, duration: 0.5 },
+      { word: 'FAIL', start: 1, duration: 0.5 },
+      { word: '❌', start: 1.5, duration: 0.5 }
     ]
   },
   {
@@ -92,10 +94,10 @@ const AI_ZIPZOP_MODES = [
     fontSize: 68,
     textStroke: 3,
     sampleCaptions: [
-      { id: 1, word: 'WATCH', start: 0, duration: 1 },
-      { id: 2, word: 'THIS', start: 1, duration: 1 },
-      { id: 3, word: 'NOW', start: 2, duration: 1 },
-      { id: 4, word: '⚡', start: 3, duration: 1 }
+      { word: 'WATCH', start: 0, duration: 1 },
+      { word: 'THIS', start: 1, duration: 1 },
+      { word: 'NOW', start: 2, duration: 1 },
+      { word: '⚡', start: 3, duration: 1 }
     ]
   }
 ];
@@ -112,6 +114,144 @@ const STORAGE_KEYS = {
   AI_ASSET_LIBRARY: 'zipzop_ai_asset_library'
 };
 
+/**
+ * Animated Gaming Mascot Component
+ * A fun, animated SVG/GIF placeholder for the auth modal
+ */
+const AnimatedMascot = () => {
+  return (
+    <div style={styles.mascotContainer}>
+      <div style={styles.mascotPlaceholder}>
+        <div style={styles.mascotAnimation}>
+          <div style={styles.mascotCircle1} />
+          <div style={styles.mascotCircle2} />
+          <div style={styles.mascotEye} />
+        </div>
+        <div style={styles.mascotText}>ZipZop AI</div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Custom Cyberpunk Auth Modal Component
+ */
+const AuthModal = ({
+  isOpen,
+  mode,
+  username,
+  password,
+  onUsernameChange,
+  onPasswordChange,
+  onSubmit,
+  onClose,
+  isLoading
+}) => {
+  if (!isOpen) return null;
+
+  const isLogin = mode === 'login';
+
+  return (
+    <div style={styles.authModalBackdrop} onClick={onClose}>
+      <div style={styles.authModal} onClick={(e) => e.stopPropagation()}>
+        {/* Close Button */}
+        <button style={styles.authCloseBtn} onClick={onClose}>
+          ✕
+        </button>
+
+        {/* Modal Content Grid */}
+        <div style={styles.authModalGrid}>
+          {/* Left: Animated Mascot */}
+          <div style={styles.authMascotSide}>
+            <AnimatedMascot />
+          </div>
+
+          {/* Right: Auth Form */}
+          <div style={styles.authFormSide}>
+            {/* Title */}
+            <h1 style={styles.authTitle}>
+              {isLogin ? '🎮 LOG IN' : '🚀 ENTER STREAM'}
+            </h1>
+
+            {/* Subtitle */}
+            <p style={styles.authSubtitle}>
+              {isLogin
+                ? 'Welcome back, creator! Unlock your viral captions.'
+                : 'Join the viral revolution. Create your account now.'}
+            </p>
+
+            {/* Form */}
+            <form
+              style={styles.authForm}
+              onSubmit={(e) => {
+                e.preventDefault();
+                onSubmit();
+              }}
+            >
+              {/* Username Field */}
+              <div style={styles.authField}>
+                <label style={styles.authLabel}>USERNAME / EMAIL</label>
+                <input
+                  type="text"
+                  style={styles.authInput}
+                  placeholder="zipzop_creator"
+                  value={username}
+                  onChange={(e) => onUsernameChange(e.target.value)}
+                  disabled={isLoading}
+                  autoFocus
+                />
+                <div style={styles.authInputGlow} />
+              </div>
+
+              {/* Password Field */}
+              <div style={styles.authField}>
+                <label style={styles.authLabel}>PASSWORD</label>
+                <input
+                  type="password"
+                  style={styles.authInput}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => onPasswordChange(e.target.value)}
+                  disabled={isLoading}
+                />
+                <div style={styles.authInputGlow} />
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                style={{
+                  ...styles.authSubmitBtn,
+                  opacity: isLoading ? 0.6 : 1,
+                  cursor: isLoading ? 'not-allowed' : 'pointer'
+                }}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <span style={styles.authLoadingSpinner} />
+                    {isLogin ? 'LOGGING IN...' : 'CREATING ACCOUNT...'}
+                  </>
+                ) : (
+                  <>{isLogin ? '⚡ LOG IN NOW' : '🚀 START STREAMING'}</>
+                )}
+              </button>
+            </form>
+
+            {/* Footer Message */}
+            <p style={styles.authFooter}>
+              🔐 Your data is encrypted and secure. No cap. 🎬
+            </p>
+          </div>
+        </div>
+
+        {/* Neon Glow Effect */}
+        <div style={styles.authGlowEffect} />
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
   // ========== DYNAMIC GOOGLE FONTS ==========
   useEffect(() => {
@@ -125,7 +265,7 @@ export default function App() {
     }
   }, []);
 
-  // Inject animations
+  // Inject animations and global input focus styles
   useEffect(() => {
     const styleId = 'zipzop-animations';
     if (!document.getElementById(styleId)) {
@@ -178,10 +318,42 @@ export default function App() {
           from { transform: translateX(400px); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
         }
+        @keyframes mascotBounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes mascotGlow {
+          0%, 100% { box-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc; }
+          50% { box-shadow: 0 0 20px #ff0055, 0 0 40px #ff0055; }
+        }
+        @keyframes authInputFocus {
+          0% { box-shadow: 0 0 5px #00ffcc; }
+          100% { box-shadow: 0 0 20px #00ffcc, inset 0 0 10px rgba(0, 255, 204, 0.2); }
+        }
+        @keyframes loadingSpinner {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        /* AUTH INPUT FOCUS STATE - FIX #2 */
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+          animation: authInputFocus 0.4s ease-out forwards !important;
+          border-color: #00ffcc !important;
+          background: rgba(0, 255, 204, 0.08) !important;
+          box-shadow: 0 0 20px #00ffcc, inset 0 0 10px rgba(0, 255, 204, 0.2) !important;
+        }
       `;
       document.head.appendChild(style);
     }
   }, []);
+
+  // ========== AUTH MODAL STATE ==========
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  const [authUsername, setAuthUsername] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
 
   // Auth state
   const [username, setUsername] = useState(null);
@@ -189,7 +361,6 @@ export default function App() {
 
   // Video upload state
   const fileInputRef = useRef(null);
-  const videoRef = useRef(null);
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState(null);
   const [uploadedFilename, setUploadedFilename] = useState(null);
   const [uploadStatus, setUploadStatus] = useState('idle');
@@ -203,16 +374,14 @@ export default function App() {
 
   // Caption Lines with Start + Duration
   const [captionLines, setCaptionLines] = useState([
-    { id: 1, word: 'OMG', start: 0, duration: 1 },
-    { id: 2, word: 'THIS', start: 1, duration: 1 },
-    { id: 3, word: 'IS', start: 2, duration: 1 },
-    { id: 4, word: 'AMAZING', start: 3, duration: 1 }
+    { word: 'OMG', start: 0, duration: 1 },
+    { word: 'THIS', start: 1, duration: 1 },
+    { word: 'IS', start: 2, duration: 1 },
+    { word: 'AMAZING', start: 3, duration: 1 }
   ]);
 
   // Caption overlay state
-  const [currentVideoTime, setCurrentVideoTime] = useState(0);
   const [activeCaption, setActiveCaption] = useState(null);
-  const [activeCaptionIndex, setActiveCaptionIndex] = useState(-1);
   const [captionStyle, setCaptionStyle] = useState(null);
 
   // Manual editor state
@@ -294,7 +463,6 @@ export default function App() {
 
         if (!isNaN(start) && !isNaN(duration) && word) {
           captions.push({
-            id: Date.now() + idx,
             word: word,
             start: start,
             duration: duration
@@ -306,64 +474,82 @@ export default function App() {
     return captions;
   }
 
-  // Video time update handler
-  function handleVideoTimeUpdate(e) {
-    const time = e.target.currentTime;
-    setCurrentVideoTime(time);
-
-    const active = captionLines.find(
-      (cap) => time >= cap.start && time <= cap.start + cap.duration
-    );
-
-    if (active) {
-      const idx = captionLines.findIndex((cap) => cap.id === active.id);
-      setActiveCaption(active);
-      setActiveCaptionIndex(idx);
-    } else {
-      setActiveCaption(null);
-      setActiveCaptionIndex(-1);
-    }
-  }
-
   // Toast helper
   function showToast(type, message) {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3000);
   }
 
-  // Auth handlers - using real apiRegister from imports
-  async function handleRegister() {
-    const u = prompt('username?') || `user${Math.floor(Math.random() * 1000)}`;
-    const p = prompt('password?') || 'pass';
-    try {
-      const r = await apiRegister(u, p);
-      if (r && r.id) {
-        showToast('success', 'Registered: ' + r.username);
-      } else {
-        showToast('error', 'Register failed');
-      }
-    } catch (err) {
-      showToast('error', 'Error: ' + String(err));
-    }
+  // ========== CUSTOM AUTH MODAL HANDLERS ==========
+
+  /**
+   * Open auth modal for registration
+   */
+  function handleRegister() {
+    setAuthMode('register');
+    setAuthUsername('');
+    setAuthPassword('');
+    setIsAuthModalOpen(true);
   }
 
-  // Login handler - using real apiLogin from imports
-  async function handleLogin() {
-    const u = prompt('username?') || 'user';
-    const p = prompt('password?') || 'pass';
+  /**
+   * Open auth modal for login
+   */
+  function handleLogin() {
+    setAuthMode('login');
+    setAuthUsername('');
+    setAuthPassword('');
+    setIsAuthModalOpen(true);
+  }
+
+  /**
+   * Close auth modal
+   */
+  function handleCloseAuthModal() {
+    setIsAuthModalOpen(false);
+    setAuthUsername('');
+    setAuthPassword('');
+    setAuthLoading(false);
+  }
+
+  /**
+   * Submit auth form (either register or login)
+   */
+  async function handleAuthSubmit() {
+    if (!authUsername.trim() || !authPassword.trim()) {
+      showToast('error', '⚠️ Enter your username AND password!');
+      return;
+    }
+
+    setAuthLoading(true);
+
     try {
-      const r = await apiLogin(u, p);
-      if (r && r.token) {
-        setToken(r.token);
-        setUsername(r.username || u);
-        localStorage.setItem(STORAGE_KEYS.TOKEN, r.token);
-        localStorage.setItem(STORAGE_KEYS.USERNAME, r.username || u);
-        showToast('success', 'Logged in');
+      if (authMode === 'register') {
+        const r = await apiRegister(authUsername, authPassword);
+        if (r && r.id) {
+          showToast('success', `✨ Welcome, ${r.username}! Now log in.`);
+          handleCloseAuthModal();
+        } else {
+          showToast('error', '❌ Registration failed. Try again.');
+        }
       } else {
-        showToast('error', 'Login failed');
+        // Login
+        const r = await apiLogin(authUsername, authPassword);
+        if (r && r.token) {
+          setToken(r.token);
+          setUsername(r.username || authUsername);
+          localStorage.setItem(STORAGE_KEYS.TOKEN, r.token);
+          localStorage.setItem(STORAGE_KEYS.USERNAME, r.username || authUsername);
+          showToast('success', `⚡ Welcome back, ${r.username || authUsername}!`);
+          handleCloseAuthModal();
+        } else {
+          showToast('error', '❌ Login failed. Check your credentials.');
+        }
       }
     } catch (err) {
-      showToast('error', 'Error: ' + String(err));
+      showToast('error', `❌ Error: ${String(err)}`);
+    } finally {
+      setAuthLoading(false);
     }
   }
 
@@ -387,7 +573,7 @@ export default function App() {
     if (!f) return;
 
     if (!token) {
-      showToast('error', 'Login required');
+      showToast('error', '🔐 Login required');
       return;
     }
 
@@ -399,14 +585,14 @@ export default function App() {
         setUploadedVideoUrl(videoUrl);
         setUploadedFilename(rsp.filename || f.name);
         setUploadStatus('uploaded');
-        showToast('success', 'Video uploaded');
+        showToast('success', '✅ Video uploaded');
       } else {
         setUploadStatus('error');
-        showToast('error', 'Upload failed');
+        showToast('error', '❌ Upload failed');
       }
     } catch (err) {
       setUploadStatus('error');
-      showToast('error', 'Upload error: ' + String(err));
+      showToast('error', '❌ Upload error: ' + String(err));
     }
   }
 
@@ -428,7 +614,7 @@ export default function App() {
         textStroke: mode.textStroke
       });
       setAiLoading(false);
-      showToast('success', `AI ZipZop: ${mode.title} Applied`);
+      showToast('success', `🎮 AI ZipZop: ${mode.title} Applied`);
     }, 2000);
   }
 
@@ -436,18 +622,15 @@ export default function App() {
   function handleReset() {
     if (window.confirm('Reset all captions and settings?')) {
       setCaptionLines([
-        { id: 1, word: 'OMG', start: 0, duration: 1 },
-        { id: 2, word: 'THIS', start: 1, duration: 1 },
-        { id: 3, word: 'IS', start: 2, duration: 1 },
-        { id: 4, word: 'AMAZING', start: 3, duration: 1 }
+        { word: 'OMG', start: 0, duration: 1 },
+        { word: 'THIS', start: 1, duration: 1 },
+        { word: 'IS', start: 2, duration: 1 },
+        { word: 'AMAZING', start: 3, duration: 1 }
       ]);
       setColorPreset('#ffd200');
       setSelectedAiMode(null);
       setCaptionStyle(null);
-      setCurrentVideoTime(0);
       setActiveCaption(null);
-      setActiveCaptionIndex(-1);
-      if (videoRef.current) videoRef.current.currentTime = 0;
       showToast('info', 'Reset');
     }
   }
@@ -463,7 +646,6 @@ export default function App() {
     const durationPerWord = 0.5;
 
     const newCaptions = words.map((word, idx) => ({
-      id: Date.now() + idx,
       word: word,
       start: idx * durationPerWord,
       duration: durationPerWord
@@ -485,44 +667,32 @@ export default function App() {
     showToast('success', `Loaded ${parsed.length} captions`);
   }
 
-  function handleUpdateCaption(captionId, field, value) {
-    setCaptionLines(
-      captionLines.map((cap) =>
-        cap.id === captionId
-          ? {
-              ...cap,
-              [field]: field === 'word' ? value : parseFloat(value) || 0
-            }
-          : cap
-      )
-    );
+  function handleUpdateCaption(captionIndex, field, value) {
+    const updatedLines = [...captionLines];
+    updatedLines[captionIndex] = {
+      ...updatedLines[captionIndex],
+      [field]: field === 'word' ? value : parseFloat(value) || 0
+    };
+    setCaptionLines(updatedLines);
   }
 
-  function handleDeleteCaption(captionId) {
-    setCaptionLines(captionLines.filter((cap) => cap.id !== captionId));
+  function handleDeleteCaption(captionIndex) {
+    setCaptionLines(captionLines.filter((_, idx) => idx !== captionIndex));
     showToast('info', 'Caption removed');
   }
 
   function handleAddCaptionRow() {
-    const newId = Date.now();
     const lastCaption = captionLines[captionLines.length - 1];
     const nextStart = lastCaption ? lastCaption.start + lastCaption.duration : 0;
 
     setCaptionLines([
       ...captionLines,
       {
-        id: newId,
         word: 'New Word',
         start: nextStart,
         duration: 0.5
       }
     ]);
-  }
-
-  function handleCaptionRowClick(caption) {
-    if (videoRef.current) {
-      videoRef.current.currentTime = caption.start;
-    }
   }
 
   // AI Asset Library Handlers
@@ -574,44 +744,37 @@ export default function App() {
     );
   }
 
-  // Find matching asset for active caption
-  function getMatchingAsset() {
-    if (!activeCaption) return null;
-
-    const activeWord = activeCaption.word.toUpperCase();
-    const matchedAsset = aiAssetLibrary.find(
-      (asset) => asset.active && activeWord.includes(asset.triggerKeyword)
-    );
-
-    return matchedAsset || null;
-  }
-
-  // Get rolling window of 5 words around active caption
-  function getContextWindow() {
-    if (activeCaptionIndex === -1) return [];
-
-    const windowSize = 5;
-    const startIdx = Math.max(0, activeCaptionIndex - Math.floor(windowSize / 2));
-    const endIdx = Math.min(captionLines.length, startIdx + windowSize);
-
-    return captionLines.slice(startIdx, endIdx);
-  }
-
-  // Get viral neon color based on caption index
-  function getViralColor(idx) {
-    if (idx === -1) return '#ffd200';
-    return VIRAL_NEON_COLORS[idx % VIRAL_NEON_COLORS.length];
+  // Handle caption change from ViralPlayer
+  function handleActiveCaptionChange(caption) {
+    setActiveCaption(caption);
   }
 
   // Render
   return (
     <div style={styles.container}>
-      {/* Toast */}
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        mode={authMode}
+        username={authUsername}
+        password={authPassword}
+        onUsernameChange={setAuthUsername}
+        onPasswordChange={setAuthPassword}
+        onSubmit={handleAuthSubmit}
+        onClose={handleCloseAuthModal}
+        isLoading={authLoading}
+      />
+
+      {/* Toast - FIX #1: Properly merge toast styles */}
       {toast && (
-        <div style={{ ...styles.toast, ...styles[`toast_${toast.type}`] }}>
-          {toast.type === 'success' && '✓ '}
-          {toast.type === 'error' && '✕ '}
-          {toast.type === 'info' && 'ℹ '}
+        <div
+          style={{
+            ...styles.toast,
+            ...(toast.type === 'success' && styles.toastSuccess),
+            ...(toast.type === 'error' && styles.toastError),
+            ...(toast.type === 'info' && styles.toastInfo)
+          }}
+        >
           {toast.message}
         </div>
       )}
@@ -669,85 +832,15 @@ export default function App() {
               </div>
             </div>
           ) : (
-            <div style={styles.videoPlayerWrapper}>
-              <video
-                ref={videoRef}
-                style={styles.videoPlayer}
-                controls
-                src={uploadedVideoUrl}
-                onTimeUpdate={handleVideoTimeUpdate}
+            <div style={styles.playerContainer}>
+              {/* ========== VIRAL PLAYER COMPONENT ========== */}
+              <ViralPlayer
+                videoUrl={uploadedVideoUrl}
+                captions={captionLines}
+                onCaptionChange={handleActiveCaptionChange}
+                autoPlay={false}
+                muted={false}
               />
-
-              {/* AI Asset Overlay */}
-              {getMatchingAsset() && (
-                <div style={styles.assetOverlayContainer}>
-                  <img
-                    key={`asset-${getMatchingAsset().id}-${activeCaption.start}`}
-                    src={getMatchingAsset().imageUrl}
-                    alt={getMatchingAsset().triggerKeyword}
-                    style={{
-                      ...styles.assetImage,
-                      animation: 'zipzopAssetPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* CENTER LAYER: Massive Viral Pop-up Word */}
-              {activeCaption && (
-                <div
-                  key={`center-${activeCaption.start}-${activeCaption.word}-${activeCaption.id}`}
-                  style={{
-                    ...styles.centerCaptionLayer,
-                    color: getViralColor(activeCaptionIndex),
-                    fontSize: `${captionStyle?.fontSize || 68}px`,
-                    animation: `${captionStyle?.animation || 'zipzopSnappyPop'} 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)`
-                  }}
-                >
-                  <div
-                    style={{
-                      fontFamily: "'Rubik One', sans-serif",
-                      fontWeight: 900,
-                      letterSpacing: 3,
-                      textTransform: 'uppercase',
-                      textShadow: `-4px -4px 0 #000, 4px -4px 0 #000, -4px 4px 0 #000, 4px 4px 0 #000, 0 0 30px rgba(0,0,0,0.9)`,
-                      filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.3))'
-                    }}
-                  >
-                    {activeCaption.word}
-                  </div>
-                </div>
-              )}
-
-              {/* BOTTOM LAYER: Context Bar with rolling sentence */}
-              {activeCaption && (
-                <div style={styles.bottomContextLayer}>
-                  <div style={styles.contextBarContainer}>
-                    {getContextWindow().map((caption, idx) => {
-                      const isActive = caption.id === activeCaption.id;
-                      return (
-                        <div
-                          key={`context-${caption.id}`}
-                          style={{
-                            ...styles.contextWord,
-                            ...(isActive ? styles.contextWordActive : {})
-                          }}
-                        >
-                          {caption.word}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* AI Loading Overlay */}
-              {aiLoading && (
-                <div style={styles.aiLoadingOverlay}>
-                  <div style={styles.aiSpinner} />
-                  <div style={styles.aiLoadingText}>AI Configuration...</div>
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -898,18 +991,17 @@ export default function App() {
                   <div style={styles.timelineTableBody}>
                     {captionLines.map((caption, idx) => (
                       <div
-                        key={caption.id}
-                        onClick={() => handleCaptionRowClick(caption)}
+                        key={idx}
                         style={{
                           ...styles.timelineRow,
-                          ...(activeCaption?.id === caption.id ? styles.timelineRowActive : {})
+                          ...(activeCaption?.word === caption.word ? styles.timelineRowActive : {})
                         }}
                       >
                         <input
                           type="text"
                           value={caption.word}
                           onChange={(e) =>
-                            handleUpdateCaption(caption.id, 'word', e.target.value)
+                            handleUpdateCaption(idx, 'word', e.target.value)
                           }
                           style={{ ...styles.timelineCell, flex: 2 }}
                           placeholder="Word"
@@ -918,7 +1010,7 @@ export default function App() {
                           type="number"
                           value={caption.start.toFixed(2)}
                           onChange={(e) =>
-                            handleUpdateCaption(caption.id, 'start', e.target.value)
+                            handleUpdateCaption(idx, 'start', e.target.value)
                           }
                           step="0.1"
                           style={{ ...styles.timelineCell, flex: 1 }}
@@ -927,7 +1019,7 @@ export default function App() {
                           type="number"
                           value={caption.duration.toFixed(2)}
                           onChange={(e) =>
-                            handleUpdateCaption(caption.id, 'duration', e.target.value)
+                            handleUpdateCaption(idx, 'duration', e.target.value)
                           }
                           step="0.1"
                           style={{ ...styles.timelineCell, flex: 1 }}
@@ -935,7 +1027,7 @@ export default function App() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteCaption(caption.id);
+                            handleDeleteCaption(idx);
                           }}
                           style={styles.deleteBtn}
                         >
@@ -946,29 +1038,11 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Add Row & Preview */}
+                {/* Add Row */}
                 <div style={styles.editorActions}>
                   <button style={styles.addRowBtn} onClick={handleAddCaptionRow}>
                     ➕ Add Caption Row
                   </button>
-
-                  <div style={styles.previewBox}>
-                    <div style={styles.previewLabel}>Live Preview</div>
-                    <div
-                      style={{
-                        fontFamily: "'Rubik One', sans-serif",
-                        fontSize: 32,
-                        fontWeight: 900,
-                        color: getViralColor(activeCaptionIndex),
-                        textShadow: `-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000`,
-                        textTransform: 'uppercase',
-                        letterSpacing: 2,
-                        minHeight: 40
-                      }}
-                    >
-                      {activeCaption?.word || captionLines[0]?.word || 'Preview'}
-                    </div>
-                  </div>
                 </div>
               </div>
             ) : (
@@ -1094,7 +1168,6 @@ export default function App() {
 
           {/* Status Bar */}
           <div style={styles.statusBar}>
-            <span>⏱️ {currentVideoTime.toFixed(2)}s</span>
             <span>📝 {captionLines.length} captions</span>
             {selectedAiMode && (
               <span>
@@ -1113,8 +1186,273 @@ export default function App() {
   );
 }
 
-/* STYLES */
+/* ============================================================================
+   STYLES - PRODUCTION-READY WITH BUG FIXES
+   ============================================================================ */
+
 const styles = {
+  // ========== AUTH MODAL STYLES ==========
+  authModalBackdrop: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0, 0, 0, 0.85)',
+    backdropFilter: 'blur(8px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    animation: 'slideIn 0.4s ease-out'
+  },
+
+  authModal: {
+    position: 'relative',
+    background: '#0d0d11',
+    borderRadius: 16,
+    border: '2px solid #ffd200',
+    boxShadow: '0 0 40px rgba(255, 210, 0, 0.4), 0 0 80px rgba(255, 0, 85, 0.2)',
+    padding: 0,
+    maxWidth: 900,
+    width: '90%',
+    maxHeight: '90vh',
+    overflow: 'hidden',
+    animation: 'slideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+  },
+
+  authCloseBtn: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: '50%',
+    border: 'none',
+    background: 'rgba(255, 0, 85, 0.8)',
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    zIndex: 10,
+    transition: 'all 0.3s ease',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+
+  authCloseBtn_hover: {
+    background: 'rgba(255, 0, 85, 1)',
+    transform: 'scale(1.1)'
+  },
+
+  authModalGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 0,
+    height: '100%'
+  },
+
+  authMascotSide: {
+    background: 'linear-gradient(135deg, #1a1a24 0%, #2a2a38 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+    borderRight: '2px solid rgba(255, 210, 0, 0.2)'
+  },
+
+  mascotContainer: {
+    width: 200,
+    height: 300,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+
+  mascotPlaceholder: {
+    position: 'relative',
+    width: 180,
+    height: 180,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+
+  mascotAnimation: {
+    width: 120,
+    height: 120,
+    position: 'relative',
+    animation: 'mascotBounce 2s ease-in-out infinite'
+  },
+
+  mascotCircle1: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: '50%',
+    border: '3px solid #ffd200',
+    top: 0,
+    left: 0,
+    animation: 'mascotGlow 2s ease-in-out infinite'
+  },
+
+  mascotCircle2: {
+    position: 'absolute',
+    width: 90,
+    height: 90,
+    borderRadius: '50%',
+    border: '2px solid #00ffcc',
+    top: 15,
+    left: 15,
+    animation: 'mascotGlow 2.5s ease-in-out infinite'
+  },
+
+  mascotEye: {
+    position: 'absolute',
+    width: 16,
+    height: 16,
+    borderRadius: '50%',
+    background: '#ff0055',
+    top: 50,
+    left: 52,
+    boxShadow: '24px 0 0 #ff0055'
+  },
+
+  mascotText: {
+    marginTop: 20,
+    fontSize: 14,
+    fontWeight: 700,
+    color: '#00ffcc',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    fontFamily: "'Rubik One', sans-serif"
+  },
+
+  authFormSide: {
+    background: '#0d0d11',
+    padding: 50,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center'
+  },
+
+  authTitle: {
+    margin: '0 0 10px 0',
+    fontSize: 32,
+    fontWeight: 900,
+    color: '#fff',
+    fontFamily: "'Rubik One', sans-serif",
+    textTransform: 'uppercase',
+    letterSpacing: 2
+  },
+
+  authSubtitle: {
+    margin: '0 0 30px 0',
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontFamily: "'Inter', sans-serif"
+  },
+
+  authForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 20
+  },
+
+  authField: {
+    position: 'relative'
+  },
+
+  authLabel: {
+    display: 'block',
+    marginBottom: 8,
+    fontSize: 11,
+    color: '#00ffcc',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontFamily: "'Rubik One', sans-serif"
+  },
+
+  // FIX #2: Removed inline animation, will be applied via global CSS
+  authInput: {
+    width: '100%',
+    padding: '14px 16px',
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: '2px solid rgba(0, 255, 204, 0.3)',
+    borderRadius: 8,
+    color: '#fff',
+    fontSize: 14,
+    fontFamily: "'Inter', sans-serif",
+    transition: 'all 0.3s ease',
+    outline: 'none',
+    boxSizing: 'border-box'
+  },
+
+  authInputGlow: {
+    position: 'absolute',
+    bottom: -2,
+    left: 0,
+    right: 0,
+    height: 2,
+    background: 'linear-gradient(90deg, #00ffcc, #ff0055, #00ffcc)',
+    borderRadius: 1,
+    opacity: 0
+  },
+
+  authSubmitBtn: {
+    marginTop: 10,
+    padding: '16px 24px',
+    background: 'linear-gradient(135deg, #ffd200, #ffed4e)',
+    border: 'none',
+    borderRadius: 8,
+    color: '#000',
+    fontSize: 14,
+    fontWeight: 900,
+    fontFamily: "'Rubik One', sans-serif",
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    boxShadow: '0 0 20px rgba(255, 210, 0, 0.5)'
+  },
+
+  authLoadingSpinner: {
+    display: 'inline-block',
+    width: 14,
+    height: 14,
+    border: '2px solid rgba(0, 0, 0, 0.2)',
+    borderTop: '2px solid #000',
+    borderRadius: '50%',
+    animation: 'loadingSpinner 0.8s linear infinite'
+  },
+
+  authFooter: {
+    marginTop: 20,
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.6)',
+    textAlign: 'center',
+    fontFamily: "'Inter', sans-serif"
+  },
+
+  authGlowEffect: {
+    position: 'absolute',
+    top: -100,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: 300,
+    height: 300,
+    background: 'radial-gradient(circle, rgba(255, 210, 0, 0.1), transparent)',
+    pointerEvents: 'none'
+  },
+
+  // ========== MAIN APP STYLES ==========
   container: {
     display: 'flex',
     flexDirection: 'column',
@@ -1126,20 +1464,30 @@ const styles = {
     overflow: 'hidden'
   },
 
+  // FIX #1: Toast styles properly separated and renamed
   toast: {
     position: 'fixed',
     top: 20,
     right: 20,
-    padding: '12px 16px',
+    padding: '14px 18px',
     borderRadius: 8,
     fontSize: 13,
     fontWeight: 600,
     zIndex: 9999,
     animation: 'slideIn 0.3s ease-out'
   },
-  toast_success: { background: '#4caf50', color: '#fff' },
-  toast_error: { background: '#ff6b6b', color: '#fff' },
-  toast_info: { background: '#2196f3', color: '#fff' },
+  toastSuccess: { 
+    background: '#4caf50', 
+    color: '#fff' 
+  },
+  toastError: { 
+    background: '#ff6b6b', 
+    color: '#fff' 
+  },
+  toastInfo: { 
+    background: '#2196f3', 
+    color: '#fff' 
+  },
 
   header: {
     borderBottom: '1px solid rgba(255,255,255,0.04)',
@@ -1167,7 +1515,16 @@ const styles = {
     justifyContent: 'center',
     background: '#000',
     borderBottom: '1px solid rgba(255,255,255,0.04)',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    padding: '20px'
+  },
+
+  playerContainer: {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
 
   uploadBox: {
@@ -1191,108 +1548,6 @@ const styles = {
     fontSize: 15,
     cursor: 'pointer'
   },
-
-  videoPlayerWrapper: {
-    position: 'relative',
-    width: '100%',
-    height: '100%',
-    overflow: 'hidden'
-  },
-  videoPlayer: { width: '100%', height: '100%', objectFit: 'contain' },
-
-  assetOverlayContainer: {
-    position: 'absolute',
-    top: '15%',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    zIndex: 60,
-    pointerEvents: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  assetImage: {
-    maxWidth: 250,
-    maxHeight: 250,
-    objectFit: 'contain',
-    filter: 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6))'
-  },
-
-  centerCaptionLayer: {
-    position: 'absolute',
-    top: '45%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    zIndex: 50,
-    pointerEvents: 'none',
-    whiteSpace: 'nowrap',
-    lineHeight: 1
-  },
-
-  bottomContextLayer: {
-    position: 'absolute',
-    bottom: '12%',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    zIndex: 49,
-    pointerEvents: 'none',
-    width: '90%',
-    maxWidth: 800
-  },
-  contextBarContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    padding: '10px 16px',
-    background: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 8,
-    backdropFilter: 'blur(4px)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    flexWrap: 'wrap'
-  },
-  contextWord: {
-    fontSize: 14,
-    fontFamily: "'Inter', -apple-system, sans-serif",
-    color: '#fff',
-    fontWeight: 400,
-    letterSpacing: 0.5,
-    padding: '4px 8px',
-    borderRadius: 4,
-    transition: 'all 0.2s ease'
-  },
-  contextWordActive: {
-    color: '#ffd200',
-    background: 'rgba(255, 210, 0, 0.2)',
-    fontWeight: 600,
-    padding: '6px 12px',
-    borderRadius: 6,
-    boxShadow: '0 0 12px rgba(255, 210, 0, 0.4)'
-  },
-
-  aiLoadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'rgba(0,0,0,0.7)',
-    backdropFilter: 'blur(3px)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 100
-  },
-  aiSpinner: {
-    width: 50,
-    height: 50,
-    border: '4px solid rgba(255,255,255,0.1)',
-    borderTop: '4px solid #ffd200',
-    borderRadius: '50%',
-    animation: 'zipzopSpin 1s linear infinite'
-  },
-  aiLoadingText: { marginTop: 12, fontSize: 14, color: '#ffd200', fontWeight: 600 },
 
   controlPanel: {
     flex: 0.5,
