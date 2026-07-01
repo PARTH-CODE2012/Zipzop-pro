@@ -10,131 +10,97 @@ import ViralPlayer from './ViralPlayer';
 import './styles.css';
 
 /**
- * AI ZipZop Studio - Dual-Layer Viral Subtitle Editor with CapCut-Style Kinetic Captions
- * Production-Ready SaaS Platform for Instagram Reels/TikTok Caption Generation
+ * AI ZipZop Studio - Premium Automated AI Captioning Platform
+ * 100% AI-Powered Viral Short Generator
  * 
- * Features:
- * - Integrated ViralPlayer with letter-by-letter neon animations
- * - Custom Cyberpunk Gaming Auth Modal with animated mascot
- * - AI ZipZop Co-Pilot with 5 gaming profiles
- * - CapCut-style AI Asset Library (keyword trigger cutout images)
- * - Simplified Start Time + Duration Caption System
- * - Real-time word-by-word synchronized playback
- * - Dynamic animations (snappy pop, shake, spin)
- * - Full localStorage persistence
- * - Professional dark-mode cyberpunk aesthetic
+ * Architecture:
+ * - Pure CSS custom symbols (NO standard emojis)
+ * - Siri-inspired cyberpunk glowing AI circle loader
+ * - Smart word-grouping (2-4 words per phrase, no character splitting)
+ * - Flawless mouse + touch dragging with position persistence
+ * - Premium AI silence cutter & jump-trimmer
+ * - Full automation workflow
  */
 
-const AI_ZIPZOP_MODES = [
-  {
-    id: 'esports_montage',
-    title: '👑 Esports Montage',
-    description: 'Fast cuts, heavy contrast, neon captions',
-    color: '#ffd200',
-    animation: 'zipzopSnappyPop',
-    fontSize: 68,
-    textStroke: 4,
-    sampleCaptions: [
-      { word: 'OMG', start: 0, duration: 1 },
-      { word: 'KILL', start: 1, duration: 1 },
-      { word: 'STREAK', start: 2, duration: 1 },
-      { word: '🔥', start: 3, duration: 1 }
-    ]
-  },
-  {
-    id: 'funny_moments',
-    title: '🤣 Funny Moments',
-    description: 'Shake animations, bright colors',
-    color: '#00ffcc',
-    animation: 'zipzopShake',
-    fontSize: 68,
-    textStroke: 3,
-    sampleCaptions: [
-      { word: 'WAIT', start: 0, duration: 1 },
-      { word: 'WHAT', start: 1, duration: 1 },
-      { word: '😂', start: 2, duration: 1 },
-      { word: 'LMAO', start: 3, duration: 1 }
-    ]
-  },
-  {
-    id: 'cinematic_story',
-    title: '📖 Cinematic',
-    description: 'Minimal, elegant, fade effect',
-    color: '#ffffff',
-    animation: 'zipzopFade',
-    fontSize: 60,
-    textStroke: 2,
-    sampleCaptions: [
-      { word: 'Cinematic', start: 0, duration: 2 },
-      { word: 'Storytelling', start: 2, duration: 2 },
-      { word: '✨', start: 4, duration: 2 }
-    ]
-  },
-  {
-    id: 'clutch_fail',
-    title: '🤫 Clutch or Fail',
-    description: 'Aggressive, fast text',
-    color: '#ff6b6b',
-    animation: 'zipzopSnappyPop',
-    fontSize: 68,
-    textStroke: 4,
-    sampleCaptions: [
-      { word: 'CLUTCH', start: 0, duration: 0.5 },
-      { word: 'OR', start: 0.5, duration: 0.5 },
-      { word: 'FAIL', start: 1, duration: 0.5 },
-      { word: '❌', start: 1.5, duration: 0.5 }
-    ]
-  },
-  {
-    id: 'viral_retention',
-    title: '📈 Viral Retention',
-    description: 'Flashing, colorful, eye-catching',
-    color: '#00ff9d',
-    animation: 'zipzopSnappyPop',
-    fontSize: 68,
-    textStroke: 3,
-    sampleCaptions: [
-      { word: 'WATCH', start: 0, duration: 1 },
-      { word: 'THIS', start: 1, duration: 1 },
-      { word: 'NOW', start: 2, duration: 1 },
-      { word: '⚡', start: 3, duration: 1 }
-    ]
-  }
-];
-
-const VIRAL_NEON_COLORS = ['#ffd200', '#00ff9d', '#ff1493', '#00e5ff'];
+const VIRAL_NEON_COLORS = ['#FF0055', '#00FFCC', '#9900FF', '#FFCC00', '#00FF66'];
 
 const STORAGE_KEYS = {
   TOKEN: 'zipzop_token',
   USERNAME: 'zipzop_username',
   UPLOADED_FILENAME: 'zipzop_uploaded_filename',
-  SELECTED_AI_MODE: 'zipzop_selected_ai_mode',
   CAPTION_LINES: 'zipzop_caption_lines',
-  COLOR_PRESET: 'zipzop_color_preset',
-  AI_ASSET_LIBRARY: 'zipzop_ai_asset_library'
+  CAPTION_POSITION: 'zipzop_caption_position'
 };
 
 /**
- * Animated Gaming Mascot Component
- * A fun, animated SVG/GIF placeholder for the auth modal
+ * Siri-Inspired Glowing AI Circle
+ * Multi-layered cyberpunk energy ball with dynamic animations
  */
-const AnimatedMascot = () => {
+const SiriAICircle = ({ isActive }) => {
+  if (!isActive) return null;
+
   return (
-    <div style={styles.mascotContainer}>
-      <div style={styles.mascotPlaceholder}>
-        <div style={styles.mascotAnimation}>
-          <div style={styles.mascotCircle1} />
-          <div style={styles.mascotCircle2} />
-          <div style={styles.mascotEye} />
+    <div style={styles.siriCircleContainer}>
+      {/* Outer pulsating ring */}
+      <div style={styles.siriRingOuter} />
+      {/* Middle glow layer */}
+      <div style={styles.siriRingMiddle} />
+      {/* Core energy ball */}
+      <div style={styles.siriRingCore} />
+      {/* Inner pulse */}
+      <div style={styles.siriPulseInner} />
+    </div>
+  );
+};
+
+/**
+ * Futuristic AI Loading Overlay
+ * Pure CSS symbols, no standard emojis
+ */
+const AILoadingOverlay = ({ isLoading, currentStep }) => {
+  if (!isLoading) return null;
+
+  const steps = [
+    { text: 'Analyzing vocal frequencies...', symbol: '◆' },
+    { text: 'Detecting speech patterns...', symbol: '▼' },
+    { text: 'Generating neon styles...', symbol: '✦' },
+    { text: 'Syncing word timelines...', symbol: '◈' },
+    { text: 'Finalizing captions...', symbol: '✤' }
+  ];
+
+  const currentStepData = steps[currentStep % steps.length];
+
+  return (
+    <div style={styles.aiLoadingOverlay}>
+      <div style={styles.aiLoadingContent}>
+        <SiriAICircle isActive={true} />
+
+        <h2 style={styles.aiLoadingTitle}>AI ZipZop Processing</h2>
+
+        <div style={styles.aiStepContainer}>
+          <span style={styles.aiStepSymbol}>{currentStepData.symbol}</span>
+          <p style={styles.aiLoadingStep}>{currentStepData.text}</p>
         </div>
-        <div style={styles.mascotText}>ZipZop AI</div>
+
+        <div style={styles.aiLoadingBar}>
+          <div
+            style={{
+              ...styles.aiLoadingBarFill,
+              width: `${((currentStep + 1) / steps.length) * 100}%`
+            }}
+          />
+        </div>
+
+        <p style={styles.aiLoadingSubtext}>
+          Your video is being transformed into viral gold
+        </p>
       </div>
     </div>
   );
 };
 
 /**
- * Custom Cyberpunk Auth Modal Component
+ * Custom Auth Modal with Siri-style AI circle
  */
 const AuthModal = ({
   isOpen,
@@ -154,33 +120,27 @@ const AuthModal = ({
   return (
     <div style={styles.authModalBackdrop} onClick={onClose}>
       <div style={styles.authModal} onClick={(e) => e.stopPropagation()}>
-        {/* Close Button */}
         <button style={styles.authCloseBtn} onClick={onClose}>
           ✕
         </button>
 
-        {/* Modal Content Grid */}
         <div style={styles.authModalGrid}>
-          {/* Left: Animated Mascot */}
           <div style={styles.authMascotSide}>
-            <AnimatedMascot />
+            <SiriAICircle isActive={true} />
+            <div style={styles.authMascotLabel}>AI ZipZop</div>
           </div>
 
-          {/* Right: Auth Form */}
           <div style={styles.authFormSide}>
-            {/* Title */}
             <h1 style={styles.authTitle}>
-              {isLogin ? '🎮 LOG IN' : '🚀 ENTER STREAM'}
+              {isLogin ? 'LOG IN' : 'CREATE ACCOUNT'}
             </h1>
 
-            {/* Subtitle */}
             <p style={styles.authSubtitle}>
               {isLogin
-                ? 'Welcome back, creator! Unlock your viral captions.'
-                : 'Join the viral revolution. Create your account now.'}
+                ? 'Return to your viral creation studio'
+                : 'Join the premium AI captioning platform'}
             </p>
 
-            {/* Form */}
             <form
               style={styles.authForm}
               onSubmit={(e) => {
@@ -188,22 +148,19 @@ const AuthModal = ({
                 onSubmit();
               }}
             >
-              {/* Username Field */}
               <div style={styles.authField}>
-                <label style={styles.authLabel}>USERNAME / EMAIL</label>
+                <label style={styles.authLabel}>USERNAME</label>
                 <input
                   type="text"
                   style={styles.authInput}
-                  placeholder="zipzop_creator"
+                  placeholder="creator_name"
                   value={username}
                   onChange={(e) => onUsernameChange(e.target.value)}
                   disabled={isLoading}
                   autoFocus
                 />
-                <div style={styles.authInputGlow} />
               </div>
 
-              {/* Password Field */}
               <div style={styles.authField}>
                 <label style={styles.authLabel}>PASSWORD</label>
                 <input
@@ -214,10 +171,8 @@ const AuthModal = ({
                   onChange={(e) => onPasswordChange(e.target.value)}
                   disabled={isLoading}
                 />
-                <div style={styles.authInputGlow} />
               </div>
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 style={{
@@ -230,27 +185,197 @@ const AuthModal = ({
                 {isLoading ? (
                   <>
                     <span style={styles.authLoadingSpinner} />
-                    {isLogin ? 'LOGGING IN...' : 'CREATING ACCOUNT...'}
+                    {isLogin ? 'LOGGING IN' : 'CREATING'}
                   </>
                 ) : (
-                  <>{isLogin ? '⚡ LOG IN NOW' : '🚀 START STREAMING'}</>
+                  <>{isLogin ? 'ENTER STUDIO' : 'START CREATING'}</>
                 )}
               </button>
             </form>
 
-            {/* Footer Message */}
             <p style={styles.authFooter}>
-              🔐 Your data is encrypted and secure. No cap. 🎬
+              Bank-grade encryption. Your data is secure.
             </p>
           </div>
         </div>
 
-        {/* Neon Glow Effect */}
         <div style={styles.authGlowEffect} />
       </div>
     </div>
   );
 };
+
+/**
+ * Draggable Caption Container with Touch + Mouse Support
+ * Words kept intact (not split by character) for proper font rendering
+ */
+const DraggableCaptionBox = ({
+  activePhrase,
+  position,
+  onPositionChange
+}) => {
+  const containerRef = useRef(null);
+  const dragStateRef = useRef({ isDragging: false, offsetX: 0, offsetY: 0 });
+
+  const handleMouseDown = (e) => {
+    dragStateRef.current.isDragging = true;
+    dragStateRef.current.offsetX = e.clientX - position.x;
+    dragStateRef.current.offsetY = e.clientY - position.y;
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleMouseMove = (e) => {
+    if (dragStateRef.current.isDragging) {
+      const newX = e.clientX - dragStateRef.current.offsetX;
+      const newY = e.clientY - dragStateRef.current.offsetY;
+      onPositionChange({ x: newX, y: newY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    dragStateRef.current.isDragging = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleTouchStart = (e) => {
+    if (e.touches.length > 0) {
+      const touch = e.touches[0];
+      dragStateRef.current.isDragging = true;
+      dragStateRef.current.offsetX = touch.clientX - position.x;
+      dragStateRef.current.offsetY = touch.clientY - position.y;
+      document.addEventListener('touchmove', handleTouchMove);
+      document.addEventListener('touchend', handleTouchEnd);
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (dragStateRef.current.isDragging && e.touches.length > 0) {
+      const touch = e.touches[0];
+      const newX = touch.clientX - dragStateRef.current.offsetX;
+      const newY = touch.clientY - dragStateRef.current.offsetY;
+      onPositionChange({ x: newX, y: newY });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    dragStateRef.current.isDragging = false;
+    document.removeEventListener('touchmove', handleTouchMove);
+    document.removeEventListener('touchend', handleTouchEnd);
+  };
+
+  if (!activePhrase) return null;
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        ...styles.draggableCaptionBox,
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        cursor: dragStateRef.current.isDragging ? 'grabbing' : 'grab'
+      }}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
+    >
+      {/* Word-by-word rendering (NOT character splitting) */}
+      <div style={styles.captionWordsContainer}>
+        {activePhrase.phrase.split(' ').map((word, wordIdx) => {
+          const randomColor =
+            VIRAL_NEON_COLORS[Math.floor(Math.random() * VIRAL_NEON_COLORS.length)];
+          const delay = wordIdx * 0.1;
+
+          return (
+            <div
+              key={`${activePhrase.phrase}-word-${wordIdx}-${activePhrase.start}`}
+              style={{
+                color: randomColor,
+                animation: `popBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) ${delay}s forwards`,
+                display: 'inline-block',
+                marginRight: '8px',
+                fontFamily: "'Rubik One', 'Arial Black', sans-serif",
+                fontSize: '56px',
+                fontWeight: 900,
+                letterSpacing: '2px',
+                textTransform: 'uppercase',
+                WebkitTextStroke: '3px #000',
+                textStroke: '3px #000',
+                textShadow: `
+                  -4px -4px 0 #000,
+                  4px -4px 0 #000,
+                  -4px 4px 0 #000,
+                  4px 4px 0 #000,
+                  0 0 40px rgba(0, 0, 0, 0.9),
+                  0 0 50px ${randomColor}
+                `,
+                filter: 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.5))',
+                textAlign: 'center'
+              }}
+            >
+              {word}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Drag indicator */}
+      <div style={styles.dragIndicator}>:: DRAG TO MOVE ::</div>
+    </div>
+  );
+};
+
+/**
+ * Smart Caption Grouping Function
+ * Groups 2-4 consecutive words if spoken rapidly (< 0.4s gap)
+ * Preserves word structure for proper font rendering
+ */
+function groupCaptions(captions, maxGapSeconds = 0.4) {
+  if (!captions || captions.length === 0) return [];
+
+  const phrases = [];
+  let currentPhrase = {
+    words: [captions[0].word],
+    start: captions[0].start,
+    end: captions[0].start + captions[0].duration
+  };
+
+  for (let i = 1; i < captions.length; i++) {
+    const caption = captions[i];
+    const gap = caption.start - currentPhrase.end;
+
+    if (gap <= maxGapSeconds && currentPhrase.words.length < 4) {
+      // Continue the phrase
+      currentPhrase.words.push(caption.word);
+      currentPhrase.end = caption.start + caption.duration;
+    } else {
+      // Start a new phrase
+      if (currentPhrase.words.length > 0) {
+        phrases.push({
+          phrase: currentPhrase.words.join(' '),
+          start: currentPhrase.start,
+          end: currentPhrase.end
+        });
+      }
+      currentPhrase = {
+        words: [caption.word],
+        start: caption.start,
+        end: caption.start + caption.duration
+      };
+    }
+  }
+
+  // Add the last phrase
+  if (currentPhrase.words.length > 0) {
+    phrases.push({
+      phrase: currentPhrase.words.join(' '),
+      start: currentPhrase.start,
+      end: currentPhrase.end
+    });
+  }
+
+  return phrases;
+}
 
 export default function App() {
   // ========== DYNAMIC GOOGLE FONTS ==========
@@ -265,77 +390,91 @@ export default function App() {
     }
   }, []);
 
-  // Inject animations and global input focus styles
+  // ========== INJECT GLOBAL ANIMATIONS ==========
   useEffect(() => {
     const styleId = 'zipzop-animations';
     if (!document.getElementById(styleId)) {
       const style = document.createElement('style');
       style.id = styleId;
       style.textContent = `
-        @keyframes zipzopSnappyPop {
-          0% { transform: scale(0.5) translateY(20px); opacity: 0; }
-          60% { transform: scale(1.2); }
-          100% { transform: scale(1) translateY(0); opacity: 1; }
-        }
-        @keyframes zipzopPopBounce {
-          0% { transform: scale(0.8) translateY(10px); opacity: 0; }
-          50% { transform: scale(1.15); }
-          100% { transform: scale(1) translateY(0); opacity: 1; }
-        }
-        @keyframes zipzopShake {
-          0%, 100% { transform: translateX(0) rotate(0deg); }
-          25% { transform: translateX(-8px) rotate(-1deg); }
-          50% { transform: translateX(8px) rotate(1deg); }
-          75% { transform: translateX(-4px) rotate(-0.5deg); }
-        }
-        @keyframes zipzopFade {
-          0% { opacity: 0; }
-          50% { opacity: 1; }
-          100% { opacity: 0.8; }
-        }
-        @keyframes zipzopFlash {
-          0%, 100% { opacity: 1; text-shadow: 0 0 10px currentColor; }
-          50% { opacity: 0.6; text-shadow: 0 0 30px currentColor; }
-        }
-        @keyframes zipzopSpin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        @keyframes zipzopAssetPop {
+        @keyframes popBounce {
           0% { 
-            transform: scale(0.3) translateY(30px); 
+            transform: scale(0.2) translateY(30px) rotate(-15deg); 
             opacity: 0; 
           }
+          30% { 
+            transform: scale(1.4) rotate(8deg); 
+            opacity: 1; 
+          }
+          50% { 
+            transform: scale(1.15) rotate(-3deg); 
+          }
           70% { 
-            transform: scale(1.12); 
+            transform: scale(1.05) rotate(1deg); 
           }
           100% { 
-            transform: scale(1) translateY(0); 
+            transform: scale(1) translateY(0) rotate(0deg); 
             opacity: 1; 
           }
         }
-        @keyframes slideIn {
-          from { transform: translateX(400px); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
+
+        @keyframes siriPulse {
+          0%, 100% { 
+            transform: scale(1); 
+            opacity: 0.8;
+          }
+          50% { 
+            transform: scale(1.08); 
+            opacity: 1;
+          }
         }
-        @keyframes mascotBounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
+
+        @keyframes siriRingPulse {
+          0%, 100% { 
+            box-shadow: 0 0 15px #00ffcc, 0 0 30px #00ffcc; 
+            transform: scale(1);
+          }
+          50% { 
+            box-shadow: 0 0 30px #ffd200, 0 0 60px #ff0055; 
+            transform: scale(1.05);
+          }
         }
-        @keyframes mascotGlow {
-          0%, 100% { box-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc; }
-          50% { box-shadow: 0 0 20px #ff0055, 0 0 40px #ff0055; }
+
+        @keyframes siriGlow {
+          0%, 100% { 
+            box-shadow: 0 0 20px #ffd200, 0 0 40px #00ffcc, inset 0 0 20px rgba(255, 210, 0, 0.3); 
+          }
+          50% { 
+            box-shadow: 0 0 40px #ff0055, 0 0 80px #00ffcc, inset 0 0 40px rgba(255, 0, 85, 0.5); 
+          }
         }
-        @keyframes authInputFocus {
-          0% { box-shadow: 0 0 5px #00ffcc; }
-          100% { box-shadow: 0 0 20px #00ffcc, inset 0 0 10px rgba(0, 255, 204, 0.2); }
-        }
+
         @keyframes loadingSpinner {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
 
-        /* AUTH INPUT FOCUS STATE - FIX #2 */
+        @keyframes loadingBarProgress {
+          0% { width: 0%; }
+          100% { width: 100%; }
+        }
+
+        @keyframes slideInFade {
+          from { 
+            transform: translateY(20px); 
+            opacity: 0; 
+          }
+          to { 
+            transform: translateY(0); 
+            opacity: 1; 
+          }
+        }
+
+        @keyframes authInputFocus {
+          0% { box-shadow: 0 0 5px #00ffcc; }
+          100% { box-shadow: 0 0 20px #00ffcc, inset 0 0 10px rgba(0, 255, 204, 0.2); }
+        }
+
         input[type="text"]:focus,
         input[type="password"]:focus {
           animation: authInputFocus 0.4s ease-out forwards !important;
@@ -348,131 +487,75 @@ export default function App() {
     }
   }, []);
 
-  // ========== AUTH MODAL STATE ==========
+  // ========== AUTH STATE ==========
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  const [authMode, setAuthMode] = useState('login');
   const [authUsername, setAuthUsername] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Auth state
   const [username, setUsername] = useState(null);
   const [token, setToken] = useState('');
 
-  // Video upload state
+  // ========== VIDEO & CAPTIONS STATE ==========
   const fileInputRef = useRef(null);
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState(null);
   const [uploadedFilename, setUploadedFilename] = useState(null);
   const [uploadStatus, setUploadStatus] = useState('idle');
 
-  // Toast state
-  const [toast, setToast] = useState(null);
+  // ========== AI GENERATION STATE ==========
+  const [aiGenerationLoading, setAiGenerationLoading] = useState(false);
+  const [aiGenerationStep, setAiGenerationStep] = useState(0);
+  const [captionLines, setCaptionLines] = useState([]);
 
-  // AI Co-Pilot state
-  const [selectedAiMode, setSelectedAiMode] = useState(null);
-  const [aiLoading, setAiLoading] = useState(false);
+  // ========== TRIM STATE ==========
+  const [aiTrimLoading, setAiTrimLoading] = useState(false);
 
-  // Caption Lines with Start + Duration
-  const [captionLines, setCaptionLines] = useState([
-    { word: 'OMG', start: 0, duration: 1 },
-    { word: 'THIS', start: 1, duration: 1 },
-    { word: 'IS', start: 2, duration: 1 },
-    { word: 'AMAZING', start: 3, duration: 1 }
-  ]);
+  // ========== CAPTION POSITION STATE ==========
+  const [captionPosition, setCaptionPosition] = useState({ x: 120, y: 150 });
 
-  // Caption overlay state
+  // ========== ACTIVE CAPTION STATE ==========
   const [activeCaption, setActiveCaption] = useState(null);
-  const [captionStyle, setCaptionStyle] = useState(null);
 
-  // Manual editor state
-  const [colorPreset, setColorPreset] = useState('#ffd200');
-  const [currentTab, setCurrentTab] = useState('ai-copilot');
-  const [captionTextInput, setCaptionTextInput] = useState('');
-  const [transcriptInput, setTranscriptInput] = useState('');
-
-  // AI Asset Library state
-  const [aiAssetLibrary, setAiAssetLibrary] = useState([]);
-  const [assetLibraryTab, setAssetLibraryTab] = useState('library');
-  const [assetUploadInput, setAssetUploadInput] = useState('');
-  const [assetKeywordInput, setAssetKeywordInput] = useState('');
-  const assetFileInputRef = useRef(null);
+  // ========== TOAST STATE ==========
+  const [toast, setToast] = useState(null);
 
   // Rehydrate from localStorage
   useEffect(() => {
     const savedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
     const savedUsername = localStorage.getItem(STORAGE_KEYS.USERNAME);
-    const savedAiMode = localStorage.getItem(STORAGE_KEYS.SELECTED_AI_MODE);
+    const savedPosition = localStorage.getItem(STORAGE_KEYS.CAPTION_POSITION);
     const savedCaptions = localStorage.getItem(STORAGE_KEYS.CAPTION_LINES);
-    const savedColor = localStorage.getItem(STORAGE_KEYS.COLOR_PRESET);
-    const savedAssets = localStorage.getItem(STORAGE_KEYS.AI_ASSET_LIBRARY);
 
     if (savedToken && savedUsername) {
       setToken(savedToken);
       setUsername(savedUsername);
     }
-    if (savedAiMode) setSelectedAiMode(savedAiMode);
+    if (savedPosition) {
+      try {
+        setCaptionPosition(JSON.parse(savedPosition));
+      } catch (e) {
+        console.error('Failed to parse position:', e);
+      }
+    }
     if (savedCaptions) {
       try {
         setCaptionLines(JSON.parse(savedCaptions));
       } catch (e) {
-        console.error('Failed to parse saved captions:', e);
-      }
-    }
-    if (savedColor) setColorPreset(savedColor);
-    if (savedAssets) {
-      try {
-        setAiAssetLibrary(JSON.parse(savedAssets));
-      } catch (e) {
-        console.error('Failed to parse saved assets:', e);
+        console.error('Failed to parse captions:', e);
       }
     }
   }, []);
 
-  // Persist captions to localStorage
+  // Persist position
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.CAPTION_POSITION, JSON.stringify(captionPosition));
+  }, [captionPosition]);
+
+  // Persist captions
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.CAPTION_LINES, JSON.stringify(captionLines));
   }, [captionLines]);
-
-  // Persist AI mode to localStorage
-  useEffect(() => {
-    if (selectedAiMode) localStorage.setItem(STORAGE_KEYS.SELECTED_AI_MODE, selectedAiMode);
-  }, [selectedAiMode]);
-
-  // Persist color preset to localStorage
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.COLOR_PRESET, colorPreset);
-  }, [colorPreset]);
-
-  // Persist AI assets to localStorage
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.AI_ASSET_LIBRARY, JSON.stringify(aiAssetLibrary));
-  }, [aiAssetLibrary]);
-
-  // Parse captions from "start | duration | word" format
-  function parseCaptions(text) {
-    if (!text.trim()) return [];
-    const lines = text.split('\n').filter((line) => line.trim());
-    const captions = [];
-
-    lines.forEach((line, idx) => {
-      const parts = line.split('|').map((p) => p.trim());
-      if (parts.length >= 3) {
-        const start = parseFloat(parts[0]);
-        const duration = parseFloat(parts[1]);
-        const word = parts.slice(2).join('|');
-
-        if (!isNaN(start) && !isNaN(duration) && word) {
-          captions.push({
-            word: word,
-            start: start,
-            duration: duration
-          });
-        }
-      }
-    });
-
-    return captions;
-  }
 
   // Toast helper
   function showToast(type, message) {
@@ -480,11 +563,8 @@ export default function App() {
     setTimeout(() => setToast(null), 3000);
   }
 
-  // ========== CUSTOM AUTH MODAL HANDLERS ==========
+  // ========== AUTH HANDLERS ==========
 
-  /**
-   * Open auth modal for registration
-   */
   function handleRegister() {
     setAuthMode('register');
     setAuthUsername('');
@@ -492,9 +572,6 @@ export default function App() {
     setIsAuthModalOpen(true);
   }
 
-  /**
-   * Open auth modal for login
-   */
   function handleLogin() {
     setAuthMode('login');
     setAuthUsername('');
@@ -502,9 +579,6 @@ export default function App() {
     setIsAuthModalOpen(true);
   }
 
-  /**
-   * Close auth modal
-   */
   function handleCloseAuthModal() {
     setIsAuthModalOpen(false);
     setAuthUsername('');
@@ -512,12 +586,9 @@ export default function App() {
     setAuthLoading(false);
   }
 
-  /**
-   * Submit auth form (either register or login)
-   */
   async function handleAuthSubmit() {
     if (!authUsername.trim() || !authPassword.trim()) {
-      showToast('error', '⚠️ Enter your username AND password!');
+      showToast('error', 'Enter username and password');
       return;
     }
 
@@ -527,33 +598,31 @@ export default function App() {
       if (authMode === 'register') {
         const r = await apiRegister(authUsername, authPassword);
         if (r && r.id) {
-          showToast('success', `✨ Welcome, ${r.username}! Now log in.`);
+          showToast('success', `Account created. Welcome, ${r.username}!`);
           handleCloseAuthModal();
         } else {
-          showToast('error', '❌ Registration failed. Try again.');
+          showToast('error', 'Registration failed');
         }
       } else {
-        // Login
         const r = await apiLogin(authUsername, authPassword);
         if (r && r.token) {
           setToken(r.token);
           setUsername(r.username || authUsername);
           localStorage.setItem(STORAGE_KEYS.TOKEN, r.token);
           localStorage.setItem(STORAGE_KEYS.USERNAME, r.username || authUsername);
-          showToast('success', `⚡ Welcome back, ${r.username || authUsername}!`);
+          showToast('success', `Welcome back, ${r.username || authUsername}!`);
           handleCloseAuthModal();
         } else {
-          showToast('error', '❌ Login failed. Check your credentials.');
+          showToast('error', 'Login failed');
         }
       }
     } catch (err) {
-      showToast('error', `❌ Error: ${String(err)}`);
+      showToast('error', `Error: ${String(err)}`);
     } finally {
       setAuthLoading(false);
     }
   }
 
-  // Logout handler
   function handleLogout() {
     setToken('');
     setUsername(null);
@@ -562,18 +631,18 @@ export default function App() {
     showToast('info', 'Logged out');
   }
 
-  // File upload handlers
+  // ========== VIDEO UPLOAD HANDLERS ==========
+
   function handleChooseClick() {
     if (fileInputRef.current) fileInputRef.current.click();
   }
 
-  // File selected handler - using real apiUpload from imports
   async function handleFileSelected(e) {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
 
     if (!token) {
-      showToast('error', '🔐 Login required');
+      showToast('error', 'Login required');
       return;
     }
 
@@ -585,169 +654,117 @@ export default function App() {
         setUploadedVideoUrl(videoUrl);
         setUploadedFilename(rsp.filename || f.name);
         setUploadStatus('uploaded');
-        showToast('success', '✅ Video uploaded');
+        setCaptionLines([]);
+        showToast('success', 'Video uploaded');
       } else {
         setUploadStatus('error');
-        showToast('error', '❌ Upload failed');
+        showToast('error', 'Upload failed');
       }
     } catch (err) {
       setUploadStatus('error');
-      showToast('error', '❌ Upload error: ' + String(err));
+      showToast('error', `Upload error: ${String(err)}`);
     }
   }
 
-  // Apply AI Mode
-  async function handleApplyAiMode(modeId) {
-    const mode = AI_ZIPZOP_MODES.find((m) => m.id === modeId);
-    if (!mode) return;
+  // ========== 1-CLICK AI AUTO-CAPTIONING ==========
 
-    setSelectedAiMode(modeId);
-    setAiLoading(true);
+  async function handleGenerateViralCaptions() {
+    if (!uploadedVideoUrl) {
+      showToast('error', 'Upload a video first');
+      return;
+    }
 
-    setTimeout(() => {
-      setCaptionLines(mode.sampleCaptions);
-      setColorPreset(mode.color);
-      setCaptionStyle({
-        color: mode.color,
-        animation: mode.animation,
-        fontSize: mode.fontSize,
-        textStroke: mode.textStroke
+    if (!token) {
+      showToast('error', 'Login required');
+      return;
+    }
+
+    setAiGenerationLoading(true);
+    setAiGenerationStep(0);
+
+    const stepInterval = setInterval(() => {
+      setAiGenerationStep((prev) => (prev + 1) % 5);
+    }, 1400);
+
+    try {
+      const jobResult = await createJob(token, {
+        videoUrl: uploadedVideoUrl,
+        filename: uploadedFilename,
+        mode: 'viral_retention'
       });
-      setAiLoading(false);
-      showToast('success', `🎮 AI ZipZop: ${mode.title} Applied`);
-    }, 2000);
-  }
 
-  // Reset handler
-  function handleReset() {
-    if (window.confirm('Reset all captions and settings?')) {
-      setCaptionLines([
-        { word: 'OMG', start: 0, duration: 1 },
-        { word: 'THIS', start: 1, duration: 1 },
-        { word: 'IS', start: 2, duration: 1 },
-        { word: 'AMAZING', start: 3, duration: 1 }
-      ]);
-      setColorPreset('#ffd200');
-      setSelectedAiMode(null);
-      setCaptionStyle(null);
-      setActiveCaption(null);
-      showToast('info', 'Reset');
-    }
-  }
+      clearInterval(stepInterval);
 
-  // Manual caption editing
-  function handleAutoSyncCaptions() {
-    if (!transcriptInput.trim()) {
-      showToast('error', 'Enter transcript first');
-      return;
-    }
+      if (jobResult && jobResult.captions) {
+        const rawCaptions = jobResult.captions.map((cap) => ({
+          word: cap.word || cap.text,
+          start: cap.start,
+          duration: cap.duration || (cap.end - cap.start)
+        }));
 
-    const words = transcriptInput.trim().split(/\s+/);
-    const durationPerWord = 0.5;
-
-    const newCaptions = words.map((word, idx) => ({
-      word: word,
-      start: idx * durationPerWord,
-      duration: durationPerWord
-    }));
-
-    setCaptionLines(newCaptions);
-    setTranscriptInput('');
-    showToast('success', `Auto-synced ${words.length} words. Adjust timings in the textarea.`);
-  }
-
-  function handleApplyCaptionText() {
-    const parsed = parseCaptions(captionTextInput);
-    if (parsed.length === 0) {
-      showToast('error', 'No valid captions found. Use format: start | duration | word');
-      return;
-    }
-
-    setCaptionLines(parsed);
-    showToast('success', `Loaded ${parsed.length} captions`);
-  }
-
-  function handleUpdateCaption(captionIndex, field, value) {
-    const updatedLines = [...captionLines];
-    updatedLines[captionIndex] = {
-      ...updatedLines[captionIndex],
-      [field]: field === 'word' ? value : parseFloat(value) || 0
-    };
-    setCaptionLines(updatedLines);
-  }
-
-  function handleDeleteCaption(captionIndex) {
-    setCaptionLines(captionLines.filter((_, idx) => idx !== captionIndex));
-    showToast('info', 'Caption removed');
-  }
-
-  function handleAddCaptionRow() {
-    const lastCaption = captionLines[captionLines.length - 1];
-    const nextStart = lastCaption ? lastCaption.start + lastCaption.duration : 0;
-
-    setCaptionLines([
-      ...captionLines,
-      {
-        word: 'New Word',
-        start: nextStart,
-        duration: 0.5
+        setCaptionLines(rawCaptions);
+        showToast('success', `Generated ${rawCaptions.length} captions`);
+      } else {
+        showToast('error', 'Failed to generate captions');
       }
-    ]);
+    } catch (err) {
+      clearInterval(stepInterval);
+      showToast('error', `Error: ${String(err)}`);
+    } finally {
+      setAiGenerationLoading(false);
+      setAiGenerationStep(0);
+    }
   }
 
-  // AI Asset Library Handlers
-  function handleAssetFileClick() {
-    if (assetFileInputRef.current) assetFileInputRef.current.click();
-  }
+  // ========== AI SILENCE CUTTER ==========
 
-  function handleAssetFileSelected(e) {
-    const f = e.target.files && e.target.files[0];
-    if (!f) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setAssetUploadInput(event.target.result);
-      showToast('info', 'Image loaded. Now add keyword and save.');
-    };
-    reader.readAsDataURL(f);
-  }
-
-  function handleAddAssetToLibrary() {
-    if (!assetUploadInput || !assetKeywordInput.trim()) {
-      showToast('error', 'Need both image and keyword');
+  async function handleAiSmartTrim() {
+    if (!uploadedVideoUrl) {
+      showToast('error', 'Upload a video first');
       return;
     }
 
-    const newAsset = {
-      id: Date.now(),
-      triggerKeyword: assetKeywordInput.toUpperCase(),
-      imageUrl: assetUploadInput,
-      active: true
-    };
+    if (!token) {
+      showToast('error', 'Login required');
+      return;
+    }
 
-    setAiAssetLibrary([...aiAssetLibrary, newAsset]);
-    setAssetUploadInput('');
-    setAssetKeywordInput('');
-    showToast('success', `Asset "${newAsset.triggerKeyword}" added to library`);
+    setAiTrimLoading(true);
+
+    try {
+      const trimResult = await createKineticCaption(token, {
+        videoUrl: uploadedVideoUrl,
+        filename: uploadedFilename,
+        action: 'trim_silence'
+      });
+
+      if (trimResult && trimResult.trimmedUrl) {
+        setUploadedVideoUrl(trimResult.trimmedUrl);
+        setCaptionLines([]);
+        showToast('success', 'Silence removed. Video trimmed.');
+      } else {
+        showToast('error', 'Trim failed');
+      }
+    } catch (err) {
+      showToast('error', `Trim error: ${String(err)}`);
+    } finally {
+      setAiTrimLoading(false);
+    }
   }
 
-  function handleRemoveAsset(assetId) {
-    setAiAssetLibrary(aiAssetLibrary.filter((asset) => asset.id !== assetId));
-    showToast('info', 'Asset removed');
-  }
-
-  function handleToggleAsset(assetId) {
-    setAiAssetLibrary(
-      aiAssetLibrary.map((asset) =>
-        asset.id === assetId ? { ...asset, active: !asset.active } : asset
-      )
-    );
-  }
-
-  // Handle caption change from ViralPlayer
+  // Handle active caption from ViralPlayer
   function handleActiveCaptionChange(caption) {
     setActiveCaption(caption);
   }
+
+  // Get grouped phrases
+  const groupedPhrases = groupCaptions(captionLines);
+  const activePhrase = groupedPhrases.find(
+    (phrase) =>
+      activeCaption &&
+      activeCaption.start >= phrase.start &&
+      activeCaption.start < phrase.end
+  );
 
   // Render
   return (
@@ -765,7 +782,10 @@ export default function App() {
         isLoading={authLoading}
       />
 
-      {/* Toast - FIX #1: Properly merge toast styles */}
+      {/* AI Loading Overlay */}
+      <AILoadingOverlay isLoading={aiGenerationLoading} currentStep={aiGenerationStep} />
+
+      {/* Toast */}
       {toast && (
         <div
           style={{
@@ -782,22 +802,22 @@ export default function App() {
       {/* Header */}
       <header style={styles.header}>
         <div style={styles.headerInner}>
-          <h1 style={styles.title}>🎮 AI ZipZop Studio</h1>
+          <h1 style={styles.title}>AI ZIPZOP STUDIO</h1>
           <div style={{ flex: 1 }} />
           {!username ? (
             <div style={styles.authRow}>
               <button style={styles.ghostBtn} onClick={handleRegister}>
-                Register
+                SIGN UP
               </button>
               <button style={styles.primaryBtn} onClick={handleLogin}>
-                Login
+                LOG IN
               </button>
             </div>
           ) : (
             <div style={styles.authRow}>
-              <span style={styles.welcome}>Welcome, {username}</span>
+              <span style={styles.welcome}>{username}</span>
               <button style={styles.ghostBtn} onClick={handleLogout}>
-                Logout
+                LOGOUT
               </button>
             </div>
           )}
@@ -806,19 +826,21 @@ export default function App() {
 
       {/* Main Layout */}
       <div style={styles.mainLayout}>
-        {/* Top: Video Player Section */}
+        {/* Video Player Section */}
         <div style={styles.videoSection}>
           {uploadStatus !== 'uploaded' ? (
-            <div style={styles.uploadBox}>
-              <div style={styles.uploadInner}>
+            <div style={styles.uploadContainer}>
+              <div style={styles.uploadContent}>
                 {uploadStatus === 'uploading' ? (
-                  <div style={styles.uploadingText}>Uploading...</div>
+                  <p style={styles.uploadingText}>UPLOADING VIDEO</p>
                 ) : (
                   <>
-                    <div style={styles.uploadTitle}>Upload Video</div>
-                    <div style={styles.uploadDesc}>ZipZop AI Editor</div>
-                    <button style={styles.chooseBtn} onClick={handleChooseClick}>
-                      Choose Video File
+                    <h2 style={styles.uploadTitle}>UPLOAD YOUR VIDEO</h2>
+                    <p style={styles.uploadDesc}>
+                      Premium AI Caption Generator
+                    </p>
+                    <button style={styles.uploadBtn} onClick={handleChooseClick}>
+                      SELECT FILE
                     </button>
                     <input
                       ref={fileInputRef}
@@ -832,8 +854,7 @@ export default function App() {
               </div>
             </div>
           ) : (
-            <div style={styles.playerContainer}>
-              {/* ========== VIRAL PLAYER COMPONENT ========== */}
+            <div style={styles.playerWrapper}>
               <ViralPlayer
                 videoUrl={uploadedVideoUrl}
                 captions={captionLines}
@@ -841,344 +862,84 @@ export default function App() {
                 autoPlay={false}
                 muted={false}
               />
+
+              {/* Draggable Caption Box */}
+              <DraggableCaptionBox
+                activePhrase={activePhrase}
+                position={captionPosition}
+                onPositionChange={setCaptionPosition}
+              />
             </div>
           )}
         </div>
 
-        {/* Bottom: Control Panel */}
+        {/* Control Panel */}
         <div style={styles.controlPanel}>
-          {/* Tab Selector */}
-          <div style={styles.tabSelector}>
-            <button
-              style={{
-                ...styles.tabBtn,
-                ...(currentTab === 'ai-copilot' ? styles.tabBtnActive : {})
-              }}
-              onClick={() => setCurrentTab('ai-copilot')}
-            >
-              🤖 AI Co-Pilot
-            </button>
-            <button
-              style={{
-                ...styles.tabBtn,
-                ...(currentTab === 'manual' ? styles.tabBtnActive : {})
-              }}
-              onClick={() => setCurrentTab('manual')}
-            >
-              ⏱️ Simple Timing
-            </button>
-            <button
-              style={{
-                ...styles.tabBtn,
-                ...(currentTab === 'assets' ? styles.tabBtnActive : {})
-              }}
-              onClick={() => setCurrentTab('assets')}
-            >
-              🎯 AI Assets
-            </button>
-            <div style={{ flex: 1 }} />
-            <button style={styles.resetBtn} onClick={handleReset}>
-              Reset
-            </button>
-          </div>
+          {/* AI Generation Section */}
+          <div style={styles.aiSection}>
+            <h3 style={styles.sectionTitle}>CAPTION GENERATION</h3>
 
-          {/* Tab Content */}
-          <div style={styles.tabContent}>
-            {currentTab === 'ai-copilot' ? (
-              // AI Co-Pilot Grid
-              <div>
-                <h3 style={styles.sectionTitle}>Select AI ZipZop Mode</h3>
-                <div style={styles.modeGrid}>
-                  {AI_ZIPZOP_MODES.map((mode) => {
-                    const isSelected = selectedAiMode === mode.id;
-                    return (
-                      <div
-                        key={mode.id}
-                        onClick={() => handleApplyAiMode(mode.id)}
-                        style={{
-                          ...styles.modeCard,
-                          borderColor: isSelected ? mode.color : 'rgba(255,255,255,0.1)',
-                          background: isSelected ? `${mode.color}15` : 'rgba(255,255,255,0.03)',
-                          cursor: aiLoading ? 'not-allowed' : 'pointer',
-                          opacity: aiLoading ? 0.6 : 1
-                        }}
-                      >
-                        <div style={{ ...styles.modeCardTitle, color: mode.color }}>
-                          {mode.title}
-                        </div>
-                        <div style={styles.modeCardDesc}>{mode.description}</div>
-                        {isSelected && (
-                          <div style={{ ...styles.modeCheckmark, color: mode.color }}>✓</div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : currentTab === 'manual' ? (
-              // Manual Editor
-              <div>
-                <h3 style={styles.sectionTitle}>⏱️ Simple Caption Timing Editor</h3>
-
-                {/* Auto-Sync Section */}
-                <div style={styles.autoSyncSection}>
-                  <div style={styles.field}>
-                    <label style={styles.label}>Paste Full Transcript (for auto-sync)</label>
-                    <textarea
-                      style={styles.textarea}
-                      placeholder="Paste your entire speech here..."
-                      value={transcriptInput}
-                      onChange={(e) => setTranscriptInput(e.target.value)}
-                      rows={2}
-                    />
-                  </div>
-                  <button style={styles.syncBtn} onClick={handleAutoSyncCaptions}>
-                    🔄 Auto-Sync Captions
-                  </button>
-                </div>
-
-                {/* Manual Text Input Section */}
-                <div style={styles.manualInputSection}>
-                  <div style={styles.field}>
-                    <label style={styles.label}>Or Enter Captions Manually</label>
-                    <div style={styles.formatGuide}>
-                      Format: <code>start | duration | word</code>
-                    </div>
-                    <div style={styles.formatExample}>
-                      Example: <code>1.2 | 3 | HELLO</code> (Starts at 1.2s and stays for 3 seconds)
-                    </div>
-                    <textarea
-                      style={styles.textarea}
-                      placeholder={`0 | 1 | OMG\n1 | 2 | THIS\n3 | 1.5 | IS\n4.5 | 2 | AMAZING`}
-                      value={captionTextInput}
-                      onChange={(e) => setCaptionTextInput(e.target.value)}
-                      rows={5}
-                    />
-                  </div>
-                  <button style={styles.applyBtn} onClick={handleApplyCaptionText}>
-                    ✅ Apply Captions
-                  </button>
-                </div>
-
-                {/* Color Preset */}
-                <div style={styles.field}>
-                  <label style={styles.label}>Text Color</label>
-                  <div style={styles.colorInputRow}>
-                    <input
-                      type="color"
-                      value={colorPreset}
-                      onChange={(e) => setColorPreset(e.target.value)}
-                      style={styles.colorInput}
-                    />
-                    <input
-                      type="text"
-                      value={colorPreset}
-                      onChange={(e) => setColorPreset(e.target.value)}
-                      style={styles.colorTextInput}
-                    />
-                  </div>
-                </div>
-
-                {/* Caption Timeline Table */}
-                <div style={styles.timelineTableContainer}>
-                  <div style={styles.timelineTableHeader}>
-                    <div style={{ ...styles.timelineCell, flex: 2 }}>Word</div>
-                    <div style={{ ...styles.timelineCell, flex: 1 }}>Start (s)</div>
-                    <div style={{ ...styles.timelineCell, flex: 1 }}>Duration (s)</div>
-                    <div style={{ ...styles.timelineCell, flex: 0.8 }}>Action</div>
-                  </div>
-
-                  <div style={styles.timelineTableBody}>
-                    {captionLines.map((caption, idx) => (
-                      <div
-                        key={idx}
-                        style={{
-                          ...styles.timelineRow,
-                          ...(activeCaption?.word === caption.word ? styles.timelineRowActive : {})
-                        }}
-                      >
-                        <input
-                          type="text"
-                          value={caption.word}
-                          onChange={(e) =>
-                            handleUpdateCaption(idx, 'word', e.target.value)
-                          }
-                          style={{ ...styles.timelineCell, flex: 2 }}
-                          placeholder="Word"
-                        />
-                        <input
-                          type="number"
-                          value={caption.start.toFixed(2)}
-                          onChange={(e) =>
-                            handleUpdateCaption(idx, 'start', e.target.value)
-                          }
-                          step="0.1"
-                          style={{ ...styles.timelineCell, flex: 1 }}
-                        />
-                        <input
-                          type="number"
-                          value={caption.duration.toFixed(2)}
-                          onChange={(e) =>
-                            handleUpdateCaption(idx, 'duration', e.target.value)
-                          }
-                          step="0.1"
-                          style={{ ...styles.timelineCell, flex: 1 }}
-                        />
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteCaption(idx);
-                          }}
-                          style={styles.deleteBtn}
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Add Row */}
-                <div style={styles.editorActions}>
-                  <button style={styles.addRowBtn} onClick={handleAddCaptionRow}>
-                    ➕ Add Caption Row
-                  </button>
-                </div>
-              </div>
+            {captionLines.length === 0 && uploadStatus === 'uploaded' ? (
+              <>
+                <button
+                  style={styles.generateBtn}
+                  onClick={handleGenerateViralCaptions}
+                  disabled={aiGenerationLoading}
+                >
+                  GENERATE VIRAL CAPTIONS
+                </button>
+                <p style={styles.generateHint}>
+                  One click. Full automation. Professional results.
+                </p>
+              </>
             ) : (
-              // AI Assets Tab
-              <div>
-                <div style={styles.assetTabSelector}>
-                  <button
-                    style={{
-                      ...styles.assetTabBtn,
-                      ...(assetLibraryTab === 'library' ? styles.assetTabBtnActive : {})
-                    }}
-                    onClick={() => setAssetLibraryTab('library')}
-                  >
-                    📦 Library ({aiAssetLibrary.length})
-                  </button>
-                  <button
-                    style={{
-                      ...styles.assetTabBtn,
-                      ...(assetLibraryTab === 'add' ? styles.assetTabBtnActive : {})
-                    }}
-                    onClick={() => setAssetLibraryTab('add')}
-                  >
-                    ➕ Add Asset
-                  </button>
+              <div style={styles.statsBox}>
+                <div style={styles.stat}>
+                  <span style={styles.statLabel}>CAPTIONS</span>
+                  <span style={styles.statValue}>{captionLines.length}</span>
                 </div>
-
-                {assetLibraryTab === 'library' ? (
-                  <div style={styles.assetLibraryContainer}>
-                    {aiAssetLibrary.length === 0 ? (
-                      <div style={styles.emptyState}>
-                        <div style={styles.emptyStateText}>No assets yet</div>
-                        <div style={styles.emptyStateSubtext}>
-                          Add a cutout image to get started
-                        </div>
-                      </div>
-                    ) : (
-                      aiAssetLibrary.map((asset) => (
-                        <div key={asset.id} style={styles.assetCard}>
-                          <img
-                            src={asset.imageUrl}
-                            alt={asset.triggerKeyword}
-                            style={styles.assetCardImage}
-                          />
-                          <div style={styles.assetCardInfo}>
-                            <div style={styles.assetCardKeyword}>{asset.triggerKeyword}</div>
-                            <div style={styles.assetCardActions}>
-                              <button
-                                style={{
-                                  ...styles.assetToggleBtn,
-                                  ...(asset.active ? styles.assetToggleBtnActive : {})
-                                }}
-                                onClick={() => handleToggleAsset(asset.id)}
-                              >
-                                {asset.active ? '✓ Active' : 'Inactive'}
-                              </button>
-                              <button
-                                style={styles.assetDeleteBtn}
-                                onClick={() => handleRemoveAsset(asset.id)}
-                              >
-                                🗑️
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                ) : (
-                  <div>
-                    <div style={styles.field}>
-                      <label style={styles.label}>
-                        Select Image (PNG with transparent background)
-                      </label>
-                      <button style={styles.chooseBtn} onClick={handleAssetFileClick}>
-                        📸 Choose Image
-                      </button>
-                      <input
-                        ref={assetFileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAssetFileSelected}
-                        style={{ display: 'none' }}
-                      />
-                    </div>
-
-                    {assetUploadInput && (
-                      <div style={styles.previewBox}>
-                        <div style={styles.previewLabel}>Image Preview</div>
-                        <img
-                          src={assetUploadInput}
-                          alt="preview"
-                          style={{
-                            maxWidth: '100%',
-                            maxHeight: 150,
-                            objectFit: 'contain'
-                          }}
-                        />
-                      </div>
-                    )}
-
-                    <div style={styles.field}>
-                      <label style={styles.label}>Trigger Keyword (e.g., "LAMBORGHINI")</label>
-                      <input
-                        type="text"
-                        placeholder="Enter keyword"
-                        value={assetKeywordInput}
-                        onChange={(e) => setAssetKeywordInput(e.target.value)}
-                        style={styles.textInput}
-                      />
-                      <div style={styles.inputHint}>
-                        This word in captions will trigger the image to pop up
-                      </div>
-                    </div>
-
-                    <button style={styles.primaryBtn} onClick={handleAddAssetToLibrary}>
-                      💾 Add to Library
-                    </button>
-                  </div>
-                )}
+                <div style={styles.stat}>
+                  <span style={styles.statLabel}>ACTIVE</span>
+                  <span style={styles.statValue}>
+                    {activePhrase?.phrase || '--'}
+                  </span>
+                </div>
+                <div style={styles.stat}>
+                  <span style={styles.statLabel}>STATUS</span>
+                  <span style={styles.statValue}>READY</span>
+                </div>
               </div>
             )}
+
+            {/* Trim Button */}
+            {captionLines.length > 0 && (
+              <button
+                style={{
+                  ...styles.trimBtn,
+                  opacity: aiTrimLoading ? 0.6 : 1
+                }}
+                onClick={handleAiSmartTrim}
+                disabled={aiTrimLoading}
+              >
+                {aiTrimLoading ? 'TRIMMING' : '[JUMP_CUT] REMOVE SILENCE'}
+              </button>
+            )}
           </div>
+
+          {/* Dragging Info */}
+          {captionLines.length > 0 && (
+            <div style={styles.dragInfo}>
+              <p style={styles.dragInfoText}>
+                [DRAG] Reposition captions on video using mouse or touch
+              </p>
+            </div>
+          )}
 
           {/* Status Bar */}
           <div style={styles.statusBar}>
-            <span>📝 {captionLines.length} captions</span>
-            {selectedAiMode && (
-              <span>
-                🤖 Mode: {AI_ZIPZOP_MODES.find((m) => m.id === selectedAiMode)?.title}
-              </span>
-            )}
-            {activeCaption && (
-              <span>
-                ▶️ Playing: <strong>{activeCaption.word}</strong> ({activeCaption.start.toFixed(2)}s)
-              </span>
-            )}
+            <span>{uploadedFilename || 'NO VIDEO'}</span>
+            <span>|</span>
+            <span>{captionLines.length} CAPTIONS</span>
           </div>
         </div>
       </div>
@@ -1187,10 +948,144 @@ export default function App() {
 }
 
 /* ============================================================================
-   STYLES - PRODUCTION-READY WITH BUG FIXES
+   PRODUCTION-READY STYLES OBJECT
    ============================================================================ */
 
 const styles = {
+  // ========== SIRI AI CIRCLE STYLES ==========
+  siriCircleContainer: {
+    position: 'relative',
+    width: 120,
+    height: 120,
+    margin: '0 auto 20px'
+  },
+
+  siriRingOuter: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    border: '3px solid transparent',
+    borderTop: '3px solid #ffd200',
+    borderRight: '3px solid #00ffcc',
+    animation: 'loadingSpinner 2s linear infinite',
+    boxShadow: '0 0 30px rgba(255, 210, 0, 0.4)'
+  },
+
+  siriRingMiddle: {
+    position: 'absolute',
+    top: '12px',
+    left: '12px',
+    width: 'calc(100% - 24px)',
+    height: 'calc(100% - 24px)',
+    borderRadius: '50%',
+    border: '2px solid transparent',
+    borderBottom: '2px solid #ff0055',
+    borderLeft: '2px solid #9900ff',
+    animation: 'loadingSpinner 3s linear reverse infinite',
+    boxShadow: '0 0 20px rgba(255, 0, 85, 0.3), inset 0 0 20px rgba(0, 255, 204, 0.1)'
+  },
+
+  siriRingCore: {
+    position: 'absolute',
+    top: '30%',
+    left: '30%',
+    width: '40%',
+    height: '40%',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle at 30% 30%, #00ffcc, #ff0055)',
+    animation: 'siriGlow 2s ease-in-out infinite',
+    boxShadow: '0 0 40px #00ffcc, 0 0 80px #ff0055'
+  },
+
+  siriPulseInner: {
+    position: 'absolute',
+    top: '35%',
+    left: '35%',
+    width: '30%',
+    height: '30%',
+    borderRadius: '50%',
+    background: '#fff',
+    animation: 'siriPulse 1.5s ease-in-out infinite',
+    opacity: 0.3
+  },
+
+  // ========== LOADING SCREEN STYLES ==========
+  aiLoadingOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'linear-gradient(135deg, #0d0d11 0%, #1a1a28 100%)',
+    backdropFilter: 'blur(12px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 999,
+    animation: 'slideInFade 0.4s ease-out'
+  },
+
+  aiLoadingContent: {
+    textAlign: 'center',
+    zIndex: 1001
+  },
+
+  aiLoadingTitle: {
+    margin: '0 0 20px 0',
+    fontSize: 32,
+    fontWeight: 900,
+    color: '#ffd200',
+    fontFamily: "'Rubik One', sans-serif",
+    textTransform: 'uppercase',
+    letterSpacing: 3,
+    textShadow: '0 0 20px rgba(255, 210, 0, 0.6)'
+  },
+
+  aiStepContainer: {
+    margin: '0 0 24px 0'
+  },
+
+  aiStepSymbol: {
+    display: 'block',
+    fontSize: 28,
+    color: '#00ffcc',
+    marginBottom: 8,
+    textShadow: '0 0 15px rgba(0, 255, 204, 0.5)'
+  },
+
+  aiLoadingStep: {
+    margin: 0,
+    fontSize: 14,
+    color: '#00ffcc',
+    fontFamily: "'Inter', sans-serif",
+    letterSpacing: 1
+  },
+
+  aiLoadingBar: {
+    width: 320,
+    height: 4,
+    background: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 2,
+    overflow: 'hidden',
+    margin: '20px auto'
+  },
+
+  aiLoadingBarFill: {
+    height: '100%',
+    background: 'linear-gradient(90deg, #ffd200, #00ffcc)',
+    boxShadow: '0 0 10px #ffd200'
+  },
+
+  aiLoadingSubtext: {
+    margin: '16px 0 0 0',
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontFamily: "'Inter', sans-serif"
+  },
+
   // ========== AUTH MODAL STYLES ==========
   authModalBackdrop: {
     position: 'fixed',
@@ -1199,12 +1094,12 @@ const styles = {
     right: 0,
     bottom: 0,
     background: 'rgba(0, 0, 0, 0.85)',
-    backdropFilter: 'blur(8px)',
+    backdropFilter: 'blur(10px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
-    animation: 'slideIn 0.4s ease-out'
+    animation: 'slideInFade 0.4s ease-out'
   },
 
   authModal: {
@@ -1212,26 +1107,25 @@ const styles = {
     background: '#0d0d11',
     borderRadius: 16,
     border: '2px solid #ffd200',
-    boxShadow: '0 0 40px rgba(255, 210, 0, 0.4), 0 0 80px rgba(255, 0, 85, 0.2)',
+    boxShadow: '0 0 50px rgba(255, 210, 0, 0.4), 0 0 100px rgba(255, 0, 85, 0.2)',
     padding: 0,
     maxWidth: 900,
     width: '90%',
     maxHeight: '90vh',
-    overflow: 'hidden',
-    animation: 'slideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+    overflow: 'hidden'
   },
 
   authCloseBtn: {
     position: 'absolute',
     top: 20,
     right: 20,
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: '50%',
     border: 'none',
     background: 'rgba(255, 0, 85, 0.8)',
     color: '#fff',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     cursor: 'pointer',
     zIndex: 10,
@@ -1241,88 +1135,24 @@ const styles = {
     justifyContent: 'center'
   },
 
-  authCloseBtn_hover: {
-    background: 'rgba(255, 0, 85, 1)',
-    transform: 'scale(1.1)'
-  },
-
   authModalGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
-    gap: 0,
-    height: '100%'
+    gap: 0
   },
 
   authMascotSide: {
     background: 'linear-gradient(135deg, #1a1a24 0%, #2a2a38 100%)',
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 40,
     borderRight: '2px solid rgba(255, 210, 0, 0.2)'
   },
 
-  mascotContainer: {
-    width: 200,
-    height: 300,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-
-  mascotPlaceholder: {
-    position: 'relative',
-    width: 180,
-    height: 180,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-
-  mascotAnimation: {
-    width: 120,
-    height: 120,
-    position: 'relative',
-    animation: 'mascotBounce 2s ease-in-out infinite'
-  },
-
-  mascotCircle1: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: '50%',
-    border: '3px solid #ffd200',
-    top: 0,
-    left: 0,
-    animation: 'mascotGlow 2s ease-in-out infinite'
-  },
-
-  mascotCircle2: {
-    position: 'absolute',
-    width: 90,
-    height: 90,
-    borderRadius: '50%',
-    border: '2px solid #00ffcc',
-    top: 15,
-    left: 15,
-    animation: 'mascotGlow 2.5s ease-in-out infinite'
-  },
-
-  mascotEye: {
-    position: 'absolute',
-    width: 16,
-    height: 16,
-    borderRadius: '50%',
-    background: '#ff0055',
-    top: 50,
-    left: 52,
-    boxShadow: '24px 0 0 #ff0055'
-  },
-
-  mascotText: {
-    marginTop: 20,
-    fontSize: 14,
+  authMascotLabel: {
+    fontSize: 12,
     fontWeight: 700,
     color: '#00ffcc',
     textTransform: 'uppercase',
@@ -1332,15 +1162,15 @@ const styles = {
 
   authFormSide: {
     background: '#0d0d11',
-    padding: 50,
+    padding: 40,
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center'
   },
 
   authTitle: {
-    margin: '0 0 10px 0',
-    fontSize: 32,
+    margin: '0 0 8px 0',
+    fontSize: 28,
     fontWeight: 900,
     color: '#fff',
     fontFamily: "'Rubik One', sans-serif",
@@ -1349,8 +1179,8 @@ const styles = {
   },
 
   authSubtitle: {
-    margin: '0 0 30px 0',
-    fontSize: 12,
+    margin: '0 0 24px 0',
+    fontSize: 11,
     color: 'rgba(255, 255, 255, 0.7)',
     fontFamily: "'Inter', sans-serif"
   },
@@ -1358,7 +1188,7 @@ const styles = {
   authForm: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 20
+    gap: 16
   },
 
   authField: {
@@ -1367,8 +1197,8 @@ const styles = {
 
   authLabel: {
     display: 'block',
-    marginBottom: 8,
-    fontSize: 11,
+    marginBottom: 6,
+    fontSize: 10,
     color: '#00ffcc',
     fontWeight: 700,
     textTransform: 'uppercase',
@@ -1376,57 +1206,45 @@ const styles = {
     fontFamily: "'Rubik One', sans-serif"
   },
 
-  // FIX #2: Removed inline animation, will be applied via global CSS
   authInput: {
     width: '100%',
-    padding: '14px 16px',
+    padding: '12px 14px',
     background: 'rgba(255, 255, 255, 0.05)',
     border: '2px solid rgba(0, 255, 204, 0.3)',
-    borderRadius: 8,
+    borderRadius: 6,
     color: '#fff',
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: "'Inter', sans-serif",
     transition: 'all 0.3s ease',
     outline: 'none',
     boxSizing: 'border-box'
   },
 
-  authInputGlow: {
-    position: 'absolute',
-    bottom: -2,
-    left: 0,
-    right: 0,
-    height: 2,
-    background: 'linear-gradient(90deg, #00ffcc, #ff0055, #00ffcc)',
-    borderRadius: 1,
-    opacity: 0
-  },
-
   authSubmitBtn: {
-    marginTop: 10,
-    padding: '16px 24px',
+    marginTop: 12,
+    padding: '14px 20px',
     background: 'linear-gradient(135deg, #ffd200, #ffed4e)',
     border: 'none',
-    borderRadius: 8,
+    borderRadius: 6,
     color: '#000',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 900,
     fontFamily: "'Rubik One', sans-serif",
     textTransform: 'uppercase',
-    letterSpacing: 2,
+    letterSpacing: 1.5,
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: 8,
     boxShadow: '0 0 20px rgba(255, 210, 0, 0.5)'
   },
 
   authLoadingSpinner: {
     display: 'inline-block',
-    width: 14,
-    height: 14,
+    width: 12,
+    height: 12,
     border: '2px solid rgba(0, 0, 0, 0.2)',
     borderTop: '2px solid #000',
     borderRadius: '50%',
@@ -1434,22 +1252,54 @@ const styles = {
   },
 
   authFooter: {
-    marginTop: 20,
-    fontSize: 10,
-    color: 'rgba(255, 255, 255, 0.6)',
+    marginTop: 16,
+    fontSize: 9,
+    color: 'rgba(255, 255, 255, 0.5)',
     textAlign: 'center',
     fontFamily: "'Inter', sans-serif"
   },
 
   authGlowEffect: {
     position: 'absolute',
-    top: -100,
+    top: -120,
     left: '50%',
     transform: 'translateX(-50%)',
-    width: 300,
-    height: 300,
+    width: 350,
+    height: 350,
     background: 'radial-gradient(circle, rgba(255, 210, 0, 0.1), transparent)',
     pointerEvents: 'none'
+  },
+
+  // ========== DRAGGABLE CAPTION BOX STYLES ==========
+  draggableCaptionBox: {
+    position: 'absolute',
+    padding: '16px 24px',
+    background: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: 10,
+    backdropFilter: 'blur(10px)',
+    border: '2px solid rgba(255, 210, 0, 0.4)',
+    zIndex: 40,
+    userSelect: 'none',
+    WebkitUserSelect: 'none',
+    boxShadow: '0 0 40px rgba(255, 210, 0, 0.3), 0 0 80px rgba(0, 255, 204, 0.1)',
+    transition: 'box-shadow 0.3s ease'
+  },
+
+  captionWordsContainer: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: '6px',
+    marginBottom: 8
+  },
+
+  dragIndicator: {
+    fontSize: 9,
+    color: 'rgba(255, 210, 0, 0.5)',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    fontFamily: "'Inter', sans-serif",
+    letterSpacing: 1
   },
 
   // ========== MAIN APP STYLES ==========
@@ -1464,30 +1314,21 @@ const styles = {
     overflow: 'hidden'
   },
 
-  // FIX #1: Toast styles properly separated and renamed
   toast: {
     position: 'fixed',
     top: 20,
     right: 20,
-    padding: '14px 18px',
-    borderRadius: 8,
-    fontSize: 13,
+    padding: '12px 16px',
+    borderRadius: 6,
+    fontSize: 12,
     fontWeight: 600,
     zIndex: 9999,
-    animation: 'slideIn 0.3s ease-out'
+    animation: 'slideInFade 0.3s ease-out'
   },
-  toastSuccess: { 
-    background: '#4caf50', 
-    color: '#fff' 
-  },
-  toastError: { 
-    background: '#ff6b6b', 
-    color: '#fff' 
-  },
-  toastInfo: { 
-    background: '#2196f3', 
-    color: '#fff' 
-  },
+
+  toastSuccess: { background: '#4caf50', color: '#fff' },
+  toastError: { background: '#ff6b6b', color: '#fff' },
+  toastInfo: { background: '#2196f3', color: '#fff' },
 
   header: {
     borderBottom: '1px solid rgba(255,255,255,0.04)',
@@ -1495,6 +1336,7 @@ const styles = {
     background: '#000',
     flexShrink: 0
   },
+
   headerInner: {
     display: 'flex',
     alignItems: 'center',
@@ -1502,24 +1344,49 @@ const styles = {
     margin: '0 auto',
     gap: 16
   },
-  title: { margin: 0, fontSize: 22, fontWeight: 800, color: '#ffd200' },
-  authRow: { display: 'flex', gap: 10, alignItems: 'center' },
-  welcome: { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
 
-  mainLayout: { display: 'flex', flex: 1, overflow: 'hidden', gap: 0 },
+  title: {
+    margin: 0,
+    fontSize: 18,
+    fontWeight: 900,
+    color: '#ffd200',
+    fontFamily: "'Rubik One', sans-serif",
+    letterSpacing: 2,
+    textTransform: 'uppercase'
+  },
+
+  authRow: {
+    display: 'flex',
+    gap: 10,
+    alignItems: 'center'
+  },
+
+  welcome: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    fontFamily: "'Inter', sans-serif"
+  },
+
+  mainLayout: {
+    display: 'flex',
+    flex: 1,
+    overflow: 'hidden',
+    gap: 0
+  },
 
   videoSection: {
-    flex: 0.5,
+    flex: 0.65,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     background: '#000',
-    borderBottom: '1px solid rgba(255,255,255,0.04)',
+    borderRight: '1px solid rgba(255,255,255,0.04)',
     overflow: 'hidden',
-    padding: '20px'
+    padding: '16px'
   },
 
-  playerContainer: {
+  playerWrapper: {
+    position: 'relative',
     width: '100%',
     height: '100%',
     display: 'flex',
@@ -1527,30 +1394,60 @@ const styles = {
     justifyContent: 'center'
   },
 
-  uploadBox: {
+  uploadContainer: {
     width: '100%',
     height: '100%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center'
   },
-  uploadInner: { textAlign: 'center' },
-  uploadingText: { color: '#ffd200', fontWeight: 700, fontSize: 18 },
-  uploadTitle: { fontSize: 32, fontWeight: 800, color: '#ffd200', marginBottom: 4 },
-  uploadDesc: { color: 'rgba(255,255,255,0.6)', fontSize: 14, marginBottom: 20 },
-  chooseBtn: {
+
+  uploadContent: {
+    textAlign: 'center'
+  },
+
+  uploadingText: {
+    color: '#ffd200',
+    fontWeight: 700,
+    fontSize: 16,
+    margin: 0,
+    fontFamily: "'Rubik One', sans-serif"
+  },
+
+  uploadTitle: {
+    fontSize: 28,
+    fontWeight: 900,
+    color: '#ffd200',
+    margin: '0 0 8px 0',
+    fontFamily: "'Rubik One', sans-serif",
+    textTransform: 'uppercase',
+    letterSpacing: 2
+  },
+
+  uploadDesc: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    margin: '0 0 20px 0',
+    fontFamily: "'Inter', sans-serif"
+  },
+
+  uploadBtn: {
     padding: '12px 28px',
-    borderRadius: 30,
+    borderRadius: 6,
     border: 'none',
     background: '#ffd200',
     color: '#000',
     fontWeight: 700,
-    fontSize: 15,
-    cursor: 'pointer'
+    fontSize: 12,
+    cursor: 'pointer',
+    fontFamily: "'Rubik One', sans-serif",
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    transition: 'all 0.3s ease'
   },
 
   controlPanel: {
-    flex: 0.5,
+    flex: 0.35,
     display: 'flex',
     flexDirection: 'column',
     background: '#111',
@@ -1558,373 +1455,143 @@ const styles = {
     overflow: 'hidden'
   },
 
-  tabSelector: {
-    display: 'flex',
-    gap: 8,
-    padding: '10px 12px',
-    borderBottom: '1px solid rgba(255,255,255,0.04)',
-    alignItems: 'center',
-    flexShrink: 0,
-    overflowX: 'auto'
-  },
-  tabBtn: {
-    padding: '8px 12px',
-    borderRadius: 6,
-    border: '1px solid rgba(255,255,255,0.1)',
-    background: 'transparent',
-    color: 'rgba(255,255,255,0.7)',
-    cursor: 'pointer',
-    fontSize: 12,
-    fontWeight: 600,
-    transition: 'all 0.2s',
-    whiteSpace: 'nowrap'
-  },
-  tabBtnActive: {
-    background: 'rgba(255,210,0,0.1)',
-    border: '1px solid #ffd200',
-    color: '#ffd200'
-  },
-  resetBtn: {
-    padding: '6px 10px',
-    borderRadius: 6,
-    border: '1px solid rgba(255,255,255,0.1)',
-    background: 'transparent',
-    color: 'rgba(255,255,255,0.6)',
-    cursor: 'pointer',
-    fontSize: 11,
-    fontWeight: 600
-  },
-
-  tabContent: {
+  aiSection: {
     flex: 1,
-    overflow: 'auto',
-    padding: '12px 14px'
+    padding: '16px',
+    overflowY: 'auto'
   },
 
-  sectionTitle: { margin: '0 0 12px 0', fontSize: 16, fontWeight: 800, color: '#ffd200' },
-
-  modeGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-    gap: 10
-  },
-  modeCard: {
-    padding: 12,
-    borderRadius: 10,
-    border: '2px solid',
-    background: 'rgba(255,255,255,0.03)',
-    cursor: 'pointer',
-    transition: 'all 0.3s'
-  },
-  modeCardTitle: { fontWeight: 700, fontSize: 12, marginBottom: 4 },
-  modeCardDesc: { fontSize: 10, color: 'rgba(255,255,255,0.7)', lineHeight: 1.3 },
-  modeCheckmark: { marginTop: 6, fontSize: 14, fontWeight: 800 },
-
-  autoSyncSection: {
-    marginBottom: 12,
-    padding: 12,
-    background: 'rgba(76,175,80,0.08)',
-    borderRadius: 8,
-    border: '1px solid rgba(76,175,80,0.2)'
-  },
-  manualInputSection: {
-    marginBottom: 12,
-    padding: 12,
-    background: 'rgba(255,210,0,0.08)',
-    borderRadius: 8,
-    border: '1px solid rgba(255,210,0,0.2)'
-  },
-  formatGuide: {
+  sectionTitle: {
+    margin: '0 0 12px 0',
     fontSize: 11,
+    fontWeight: 800,
     color: '#ffd200',
-    fontWeight: 600,
-    marginBottom: 4,
-    padding: '6px 8px',
-    background: 'rgba(255,210,0,0.1)',
-    borderRadius: 4,
-    fontFamily: 'monospace'
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    fontFamily: "'Rubik One', sans-serif"
   },
-  formatExample: {
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.6)',
-    marginBottom: 8,
-    padding: '6px 8px',
-    background: 'rgba(0,0,0,0.3)',
-    borderRadius: 4,
-    fontFamily: 'monospace',
-    borderLeft: '3px solid #ffd200'
-  },
-  syncBtn: {
+
+  generateBtn: {
     width: '100%',
-    padding: '10px 12px',
+    padding: '14px 16px',
     borderRadius: 6,
     border: 'none',
-    background: 'linear-gradient(90deg, #4caf50, #66bb6a)',
-    color: '#fff',
-    fontWeight: 700,
-    fontSize: 13,
-    cursor: 'pointer',
-    marginTop: 8,
-    transition: 'all 0.2s'
-  },
-  applyBtn: {
-    width: '100%',
-    padding: '10px 12px',
-    borderRadius: 6,
-    border: 'none',
-    background: 'linear-gradient(90deg, #ffd200, #ffed4e)',
+    background: 'linear-gradient(135deg, #ffd200, #ffed4e)',
     color: '#000',
-    fontWeight: 700,
-    fontSize: 13,
-    cursor: 'pointer',
-    marginTop: 8,
-    transition: 'all 0.2s'
-  },
-
-  timelineTableContainer: {
-    marginTop: 12,
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: 8,
-    overflow: 'hidden',
-    background: 'rgba(0,0,0,0.3)'
-  },
-  timelineTableHeader: {
-    display: 'flex',
-    background: 'rgba(255,210,0,0.1)',
-    borderBottom: '1px solid rgba(255,255,255,0.1)',
-    padding: '8px 0',
-    fontWeight: 700,
     fontSize: 11,
-    color: '#ffd200'
-  },
-  timelineCell: {
-    padding: '8px 10px',
-    borderRight: '1px solid rgba(255,255,255,0.05)',
-    display: 'flex',
-    alignItems: 'center'
-  },
-  timelineTableBody: {
-    maxHeight: 300,
-    overflow: 'auto'
-  },
-  timelineRow: {
-    display: 'flex',
-    borderBottom: '1px solid rgba(255,255,255,0.05)',
+    fontWeight: 900,
+    fontFamily: "'Rubik One', sans-serif",
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
     cursor: 'pointer',
-    transition: 'background 0.2s',
-    padding: '4px 0'
-  },
-  timelineRowActive: {
-    background: 'rgba(255,210,0,0.15)'
+    transition: 'all 0.3s ease',
+    boxShadow: '0 0 25px rgba(255, 210, 0, 0.5)',
+    marginBottom: 10
   },
 
-  editorActions: {
-    marginTop: 12,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 10
+  generateHint: {
+    margin: 0,
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontFamily: "'Inter', sans-serif",
+    lineHeight: 1.4
   },
-  addRowBtn: {
+
+  statsBox: {
+    background: 'rgba(255, 210, 0, 0.08)',
+    border: '1px solid rgba(255, 210, 0, 0.2)',
+    borderRadius: 6,
+    padding: '10px',
+    marginBottom: 10
+  },
+
+  stat: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '6px 0',
+    fontSize: 10,
+    color: '#fff',
+    fontFamily: "'Inter', sans-serif"
+  },
+
+  statLabel: {
+    fontWeight: 600,
+    color: 'rgba(255, 255, 255, 0.6)'
+  },
+
+  statValue: {
+    color: '#ffd200',
+    fontWeight: 700
+  },
+
+  trimBtn: {
+    width: '100%',
     padding: '10px 12px',
     borderRadius: 6,
-    border: '1px solid rgba(255,255,255,0.2)',
-    background: 'rgba(76,175,80,0.1)',
-    color: '#4caf50',
-    fontWeight: 600,
-    fontSize: 12,
-    cursor: 'pointer',
-    transition: 'all 0.2s'
-  },
-  deleteBtn: {
-    padding: '6px 8px',
-    borderRadius: 4,
     border: 'none',
-    background: 'transparent',
-    cursor: 'pointer',
-    fontSize: 12,
-    margin: '8px 6px'
-  },
-
-  field: { marginBottom: 12, display: 'flex', flexDirection: 'column' },
-  label: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 6, fontWeight: 600 },
-  textarea: {
-    padding: '8px 10px',
-    borderRadius: 6,
-    background: '#1a1a1a',
-    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'linear-gradient(135deg, #ff6b6b, #ff8a80)',
     color: '#fff',
-    fontSize: 12,
-    fontFamily: 'monospace',
-    resize: 'none'
-  },
-  textInput: {
-    padding: '8px 10px',
-    borderRadius: 6,
-    background: '#1a1a1a',
-    border: '1px solid rgba(255,255,255,0.1)',
-    color: '#fff',
-    fontSize: 12
-  },
-
-  colorInputRow: { display: 'flex', gap: 8 },
-  colorInput: { width: 50, height: 36, borderRadius: 6, border: 'none', cursor: 'pointer' },
-  colorTextInput: {
-    flex: 1,
-    padding: '8px 10px',
-    borderRadius: 6,
-    background: '#1a1a1a',
-    border: '1px solid rgba(255,255,255,0.1)',
-    color: '#fff',
-    fontSize: 12
-  },
-
-  previewBox: {
-    padding: 12,
-    background: 'rgba(0,0,0,0.4)',
-    borderRadius: 8,
-    border: '1px solid rgba(255,255,255,0.08)',
-    marginTop: 8
-  },
-  previewLabel: { fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 8 },
-
-  assetTabSelector: {
-    display: 'flex',
-    gap: 8,
-    marginBottom: 12,
-    borderBottom: '1px solid rgba(255,255,255,0.08)',
-    paddingBottom: 8
-  },
-  assetTabBtn: {
-    padding: '6px 10px',
-    borderRadius: 4,
-    border: '1px solid rgba(255,255,255,0.1)',
-    background: 'transparent',
-    color: 'rgba(255,255,255,0.6)',
-    cursor: 'pointer',
-    fontSize: 11,
-    fontWeight: 600,
-    transition: 'all 0.2s'
-  },
-  assetTabBtnActive: {
-    background: 'rgba(255,210,0,0.08)',
-    border: '1px solid rgba(255,210,0,0.6)',
-    color: '#ffd200'
-  },
-  assetLibraryContainer: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
-    gap: 10
-  },
-  assetCard: {
-    padding: 8,
-    background: 'rgba(255,255,255,0.03)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: 8,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 6
-  },
-  assetCardImage: {
-    width: 80,
-    height: 80,
-    objectFit: 'contain',
-    borderRadius: 4
-  },
-  assetCardInfo: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 4,
-    width: '100%'
-  },
-  assetCardKeyword: {
     fontSize: 10,
     fontWeight: 700,
-    color: '#ffd200',
-    textAlign: 'center',
-    wordBreak: 'break-word'
+    fontFamily: "'Rubik One', sans-serif",
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    marginBottom: 10,
+    boxShadow: '0 0 15px rgba(255, 107, 107, 0.4)'
   },
-  assetCardActions: {
-    display: 'flex',
-    gap: 4,
-    width: '100%'
+
+  dragInfo: {
+    background: 'rgba(0, 255, 204, 0.08)',
+    border: '1px solid rgba(0, 255, 204, 0.2)',
+    borderRadius: 6,
+    padding: '10px',
+    marginBottom: 10
   },
-  assetToggleBtn: {
-    flex: 1,
-    padding: '4px 6px',
-    borderRadius: 4,
-    border: '1px solid rgba(255,255,255,0.1)',
-    background: 'rgba(255,255,255,0.05)',
-    color: 'rgba(255,255,255,0.6)',
+
+  dragInfoText: {
+    margin: 0,
     fontSize: 9,
-    fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'all 0.2s'
-  },
-  assetToggleBtnActive: {
-    background: 'rgba(76,175,80,0.2)',
-    border: '1px solid rgba(76,175,80,0.6)',
-    color: '#4caf50'
-  },
-  assetDeleteBtn: {
-    padding: '4px 6px',
-    borderRadius: 4,
-    border: '1px solid rgba(255,255,255,0.1)',
-    background: 'transparent',
-    cursor: 'pointer',
-    fontSize: 10
-  },
-  emptyState: {
-    textAlign: 'center',
-    padding: '20px',
-    color: 'rgba(255,255,255,0.5)'
-  },
-  emptyStateText: {
-    fontSize: 14,
-    fontWeight: 600,
-    marginBottom: 4
-  },
-  emptyStateSubtext: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.4)'
-  },
-  inputHint: {
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.5)',
-    marginTop: 4,
-    fontStyle: 'italic'
+    color: '#00ffcc',
+    fontFamily: "'Inter', sans-serif",
+    lineHeight: 1.4,
+    letterSpacing: 0.5
   },
 
   statusBar: {
     display: 'flex',
-    gap: 12,
-    padding: '10px 12px',
+    gap: 8,
+    padding: '10px',
     borderTop: '1px solid rgba(255,255,255,0.04)',
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.7)',
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.6)',
     flexShrink: 0,
-    overflowX: 'auto'
+    fontFamily: "'Inter', sans-serif"
   },
 
   primaryBtn: {
     padding: '8px 12px',
-    borderRadius: 6,
+    borderRadius: 4,
     border: 'none',
     background: 'linear-gradient(90deg, #00e5ff, #7c4dff)',
     color: '#000',
     fontWeight: 700,
     cursor: 'pointer',
-    fontSize: 12
+    fontSize: 11,
+    fontFamily: "'Rubik One', sans-serif"
   },
+
   ghostBtn: {
     padding: '8px 12px',
-    borderRadius: 6,
+    borderRadius: 4,
     border: '1px solid rgba(255,255,255,0.1)',
     background: 'transparent',
     color: '#fff',
     cursor: 'pointer',
-    fontSize: 12,
-    fontWeight: 600
+    fontSize: 11,
+    fontWeight: 600,
+    fontFamily: "'Inter', sans-serif"
   }
 };
